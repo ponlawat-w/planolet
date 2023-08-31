@@ -1,7 +1,9 @@
 <script lang="ts">
   import { SlideToggle } from '@skeletonlabs/skeleton';
   import { getMapLayersContext } from '../../lib/contexts';
-  import { LayerType, askToRemoveLayer, toggleLayerVisibility } from '../../lib/layers';
+  import { AppMapLayerType, askToRemoveLayer, toggleLayerVisibility } from '../../lib/layers/default';
+  import type { AppBasemapLayer } from '../../lib/layers/basemap';
+  import type { AppObjectLayer } from '../../lib/layers/object';
 
   const { mapContext, layersContext, selectedLayerContext } = getMapLayersContext();
 
@@ -22,6 +24,13 @@
   $: if ($selectedLayerContext && $layersContext) {
     visible = $selectedLayerContext.visible;
   }
+
+  let selectedBasemapLayer: AppBasemapLayer|undefined;
+  $: selectedBasemapLayer = $selectedLayerContext && $selectedLayerContext.type === AppMapLayerType.BasemapLayer ?
+    $selectedLayerContext as AppBasemapLayer : undefined;
+  let selectedFeatureLayer: AppObjectLayer|undefined;
+  $: selectedFeatureLayer = $selectedLayerContext && $selectedLayerContext.type === AppMapLayerType.FeatureLayer ?
+    $selectedLayerContext as AppObjectLayer : undefined;
 </script>
 
 {#if $selectedLayerContext}
@@ -46,7 +55,7 @@
         </h1>
       {/if}
       <span class="text-sm">
-        {#if $selectedLayerContext.type === LayerType.TileLayer}Tile Layer (Raster){/if}
+        {#if $selectedLayerContext.type === AppMapLayerType.BasemapLayer}Basemap Layer{/if}
       </span>
     </div>
     <hr class="mb-2">
@@ -56,9 +65,9 @@
       </SlideToggle>
     </div>
     <hr class="mb-2">
-    {#if $selectedLayerContext.type === LayerType.TileLayer}
+    {#if selectedBasemapLayer}
       <textarea class="textarea font-mono text-xs mb-2" style="cursor: default !important;"
-        value={$selectedLayerContext.options.tileLayer?.url ?? ''} readonly></textarea>
+        value={selectedBasemapLayer.options.url ?? ''} readonly></textarea>
     {/if}
     <button class="btn btn-sm w-full variant-filled-error" on:click={() => askToRemoveLayer($selectedLayerContext, $mapContext, layersContext, selectedLayerContext)}>
       <i class="fa fa-trash mr-2"></i>

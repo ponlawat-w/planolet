@@ -1,6 +1,6 @@
 import type { ModalComponent } from '@skeletonlabs/skeleton';
-import NewLayerModal from './NewLayerModal.svelte';
+import NewBasemapLayerModal from './NewBasemapLayerModal.svelte';
 
 export const modalNewLayer: ModalComponent = {
-  ref: NewLayerModal
+  ref: NewBasemapLayerModal
 };

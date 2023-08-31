@@ -13,7 +13,7 @@
   import LayerInfo from './components/layers/LayerInfo.svelte';
   
   const mapContext = setContext<ContextMap>(CONTEXT_MAP, writable(undefined));
-  setContext<ContextLayers>(CONTEXT_LAYERS, writable([]));
+  setContext<ContextLayers>(CONTEXT_LAYERS, writable({ basemaps: [], objects: [] }));
   const selectedLayerContext = setContext<ContextSelectedLayer>(CONTEXT_SELECTED_LAYER, writable(undefined));
 
   let showLeftBar = true;

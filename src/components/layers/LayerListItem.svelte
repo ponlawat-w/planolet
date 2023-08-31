@@ -1,8 +1,8 @@
 <script lang="ts">
   import { getMapLayersContext } from '../../lib/contexts';
-  import { type MapLayer, askToRemoveLayer, toggleLayerVisibility } from '../../lib/layers';
+  import { askToRemoveLayer, toggleLayerVisibility, type AppMapLayer } from '../../lib/layers/default';
 
-  export let layer: MapLayer;
+  export let layer: AppMapLayer;
   export let dragFocused: boolean = false;
 
   const { mapContext, layersContext, selectedLayerContext } = getMapLayersContext();
