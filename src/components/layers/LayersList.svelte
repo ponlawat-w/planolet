@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { addBasemapLayer, reorderBasemapLayers, type AppBasemapLayer } from '../../lib/layers/basemap';
+  import { addBasemapLayer, type AppBasemapLayer } from '../../lib/layers/basemap';
   import { AppMapLayerType, type AppMapLayer } from '../../lib/layers/default';
   import { getMapLayersContext } from '../../lib/contexts';
   import { getPrimaryToast } from '../../lib/toasts';
   import { modalNewLayer } from '../modals';
   import { modalStore, type ModalSettings, toastStore } from '@skeletonlabs/skeleton';
-  import { reorderObjectLayers, type AppObjectLayer } from '../../lib/layers/object';
+  import type { AppObjectLayer } from '../../lib/layers/object';
   import Droppable from './reorder-dnd/Droppable.svelte';
   import Layer from './LayerListItem.svelte';
 
@@ -64,11 +64,9 @@
         ...arr.slice(newIndex)
       ].filter(x => x) as AppMapLayer[];
       if (type === AppMapLayerType.BasemapLayer) {
-        reorderBasemapLayers($mapContext, newLayers as AppBasemapLayer[]);
         return { ...layers, basemaps: newLayers as AppBasemapLayer[] };
       }
       if (type === AppMapLayerType.FeatureLayer) {
-        reorderObjectLayers($mapContext, newLayers as AppObjectLayer[]);
         return { ...layers, objects: newLayers as AppObjectLayer[] };
       }
       return layers;

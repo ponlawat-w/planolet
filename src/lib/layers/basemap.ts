@@ -41,7 +41,6 @@ export const addBasemapLayer = (map: Map, layers: AppBasemapLayer[], newLayer: A
   newLayer.leafletLayer.options.pane = newLayer.pane;
   map.addLayer(newLayer.leafletLayer);
   layers = [newLayer, ...layers];
-  reorderBasemapLayers(map, layers);
   return layers;
 };
 

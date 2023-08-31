@@ -16,7 +16,6 @@ export const addObjectLayer = (map: Map, layers: AppObjectLayer[], newLayer: App
   }
   map.addLayer(newLayer.leafletLayer);
   layers = [newLayer, ...layers];
-  reorderObjectLayers(map, layers);
   return layers;
 };
 

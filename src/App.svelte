@@ -11,10 +11,17 @@
   import LayersBar from './components/layers/LayersList.svelte';
   import Map from './components/Map.svelte';
   import LayerInfo from './components/layers/LayerInfo.svelte';
+  import { reorderBasemapLayers } from './lib/layers/basemap';
+  import { reorderObjectLayers } from './lib/layers/object';
   
   const mapContext = setContext<ContextMap>(CONTEXT_MAP, writable(undefined));
-  setContext<ContextLayers>(CONTEXT_LAYERS, writable({ basemaps: [], objects: [] }));
+  const layersContext = setContext<ContextLayers>(CONTEXT_LAYERS, writable({ basemaps: [], objects: [] }));
   const selectedLayerContext = setContext<ContextSelectedLayer>(CONTEXT_SELECTED_LAYER, writable(undefined));
+
+  let shouldRerenderLayers: boolean = false;
+  layersContext.subscribe(() => {
+    shouldRerenderLayers = true;
+  });
 
   let showLeftBar = true;
   let showRightBar = true;
@@ -42,6 +49,10 @@
       lastShowLeftBar = showLeftBar;
       lastShowRightBar = showRightBar;
       lastSelectedLayer = $selectedLayerContext;
+    }
+    if (shouldRerenderLayers) {
+      reorderBasemapLayers($mapContext, $layersContext.basemaps);
+      reorderObjectLayers($mapContext, $layersContext.objects);
     }
   });
 </script>

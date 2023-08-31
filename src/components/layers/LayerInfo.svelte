@@ -2,6 +2,7 @@
   import { SlideToggle } from '@skeletonlabs/skeleton';
   import { getMapLayersContext } from '../../lib/contexts';
   import { AppMapLayerType, askToRemoveLayer, toggleLayerVisibility } from '../../lib/layers/default';
+  import { getFeaturesCount, getGeometryType } from '../../lib/layers/feature';
   import type { AppBasemapLayer } from '../../lib/layers/basemap';
   import type { AppObjectLayer } from '../../lib/layers/object';
 
@@ -28,9 +29,12 @@
   let selectedBasemapLayer: AppBasemapLayer|undefined;
   $: selectedBasemapLayer = $selectedLayerContext && $selectedLayerContext.type === AppMapLayerType.BasemapLayer ?
     $selectedLayerContext as AppBasemapLayer : undefined;
+
   let selectedFeatureLayer: AppObjectLayer|undefined;
   $: selectedFeatureLayer = $selectedLayerContext && $selectedLayerContext.type === AppMapLayerType.FeatureLayer ?
     $selectedLayerContext as AppObjectLayer : undefined;
+  let featuresCount: number;
+  $: featuresCount = getFeaturesCount(selectedFeatureLayer);
 </script>
 
 {#if $selectedLayerContext}
@@ -55,7 +59,8 @@
         </h1>
       {/if}
       <span class="text-sm">
-        {#if $selectedLayerContext.type === AppMapLayerType.BasemapLayer}Basemap Layer{/if}
+        {#if $selectedLayerContext.type === AppMapLayerType.BasemapLayer}Basemap Layer
+        {:else if $selectedLayerContext.type === AppMapLayerType.FeatureLayer}Feature Layer ({getGeometryType(selectedFeatureLayer)}){/if}
       </span>
     </div>
     <hr class="mb-2">
@@ -68,10 +73,15 @@
     {#if selectedBasemapLayer}
       <textarea class="textarea font-mono text-xs mb-2" style="cursor: default !important;"
         value={selectedBasemapLayer.options.url ?? ''} readonly></textarea>
+    {:else if selectedFeatureLayer}
+      <p class="pb-2">
+        {featuresCount} feature{featuresCount === 1 ? '' : 's'} in this layer.
+      </p>
     {/if}
+    <hr class="mb-2">
     <button class="btn btn-sm w-full variant-filled-error" on:click={() => askToRemoveLayer($selectedLayerContext, $mapContext, layersContext, selectedLayerContext)}>
       <i class="fa fa-trash mr-2"></i>
-      Remove
+      Remove Layer
     </button>
   </div>
 {/if}
