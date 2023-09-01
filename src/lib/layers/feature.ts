@@ -1,4 +1,4 @@
-import type { Feature, FeatureCollection, MultiPoint, Point } from 'geojson';
+import type { Feature, FeatureCollection, Geometry, MultiPoint, Point } from 'geojson';
 import { AppMapLayerType, type AppMapLayer } from './default';
 import { FeatureGroup, LatLng, geoJSON, type Layer, CircleMarker } from 'leaflet';
 import type { AppObjectLayer } from './object';
@@ -13,7 +13,7 @@ const getFeaturePoint = (feature: Feature<Point>): Layer => new CircleMarker(
   }
 );
 
-const getFeatureCollectionLayer = (featureCollection: FeatureCollection): Layer => {
+const getLeafletLayerFromFeatureCollection = (featureCollection: FeatureCollection): Layer => {
   const layers: Layer[] = [];
   for (const feature of featureCollection.features) {
     if (feature.geometry.type === 'Point') {
@@ -33,7 +33,7 @@ const getFeatureCollectionLayer = (featureCollection: FeatureCollection): Layer 
 
 export type AppFeatureLayerOptions = {
   url?: string,
-  featureCollection: FeatureCollection
+  data: FeatureCollection|Feature|Geometry
 };
 
 export type AppFeatureLayer = AppMapLayer & {
@@ -41,26 +41,59 @@ export type AppFeatureLayer = AppMapLayer & {
   options: AppFeatureLayerOptions
 }
 
-export const createFeatureLayer = (name: string, featureCollection: FeatureCollection, url?: string): AppObjectLayer => ({
+export const createFeatureLayer = (name: string, data: any, url?: string): AppObjectLayer => ({
   name,
   type: AppMapLayerType.FeatureLayer,
   visible: true,
-  leafletLayer: getFeatureCollectionLayer(featureCollection),
-  options: { featureCollection, url }
+  leafletLayer: getLeafletLayerFromFeatureCollection(getFeatureCollectionFromObject(data)),
+  options: { data, url }
 });
 
 export const getGeometryType = (layer: AppFeatureLayer): string => {
-  if (!layer || !layer.options.featureCollection || !layer.options.featureCollection.features.length) {
+  if (!layer || !layer.options.data) {
     return 'Empty';
   }
-  let type: string = undefined;
-  for (const feature of layer.options.featureCollection.features) {
-    if (type && feature.geometry.type !== type) {
-      return 'Mixed';
+  if (layer.options.data.type === 'FeatureCollection') {
+    let type: string;
+    for (const feature of layer.options.data.features) {
+      if (type && feature.geometry.type !== type) {
+        return 'Mixed Feature Collection';
+      }
+      type = feature.geometry.type;
     }
-    type = feature.geometry.type;
+    return `${type ?? 'Empty'} Feature Collection`;
   }
-  return type;
+  if (layer.options.data.type === 'Feature') {
+    return `Single ${layer.options.data.geometry.type} Feature`;
+  }
+  if (layer.options.data.type) {
+    return `Single ${layer.options.data.type} Geometry`;
+  }
+  return 'Unknown Type'
 };
 
-export const getFeaturesCount = (layer: AppFeatureLayer): number => layer && layer.options.featureCollection ? layer.options.featureCollection.features.length : 0;
+export const getFeaturesCount = (layer: AppFeatureLayer): number => layer && layer.options.data && layer.options.data.type === 'FeatureCollection' ?
+  layer.options.data.features.length : 0;
+
+export const getFeatureCollectionFromObject = (obj: any): FeatureCollection => {
+  if (!obj.type) throw new Error('Property type is required in the object');
+  if (obj.type === 'FeatureCollection') return obj;
+  if (obj.type === 'Feature') return { type: 'FeatureCollection', features: [obj] };
+  if (
+    obj.type === 'Point'
+    || obj.type === 'MultiPoint'
+    || obj.type === 'LineString'
+    || obj.type === 'MultiLineString'
+    || obj.type === 'Polygon'
+    || obj.type === 'MultiPolygon'
+    || obj.type === 'GeometryCollection'
+  ) return {
+    type: 'FeatureCollection',
+    features: [{
+      type: 'Feature',
+      geometry: obj,
+      properties: {}
+    }]
+  };
+  throw new Error(`Unknown GeoJSON type ${obj.type}`);
+};

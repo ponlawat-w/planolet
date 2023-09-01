@@ -15,3 +15,9 @@ export const getPrimaryToast = (message:string) => getBackgroundToast(message, '
 export const getSuccessToast = (message:string) => getBackgroundToast(message, 'variant-filled-success');
 export const getWarningToast = (message:string) => getBackgroundToast(message, 'variant-filled-warning');
 export const getErrorToast = (message:string) => getBackgroundToast(message, 'variant-filled-error');
+export const getExceptionErrorToast = (message:string, ex: any|Error) => {
+  if (!(ex instanceof Error)) {
+    return getErrorToast(message);
+  }
+  return getErrorToast(message + ': ' + ex.message);
+};

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { modalStore, toastStore } from '@skeletonlabs/skeleton';
   import type { ModalParent } from '../../types';
-  import { getErrorToast } from '../../lib/toasts';
+  import { getExceptionErrorToast } from '../../lib/toasts';
   import { basemapLayerUrlValid, type AppBasemapLayer, createBasemapLayer } from '../../lib/layers/basemap';
 
   export let parent: ModalParent;
@@ -17,14 +17,14 @@
       return;
     }
     try {
-      name = name === '' ? 'Untitled' : name;
+      name = name.trim() === '' ? 'Untitled' : name;
       const layer: AppBasemapLayer = createBasemapLayer(name, url);
       if ($modalStore[0].response && layer) {
         $modalStore[0].response(layer);
       }
       modalStore.close();
-    } catch {
-      toastStore.trigger(getErrorToast(`Cannot add layer "${name}"`));
+    } catch (ex: Error|any) {
+      toastStore.trigger(getExceptionErrorToast(`Cannot add basemap layer "${name}"`, ex));
     }
   };
 </script>

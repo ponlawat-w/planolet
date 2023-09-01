@@ -3,27 +3,42 @@
   import { AppMapLayerType, type AppMapLayer } from '../../lib/layers/default';
   import { getMapLayersContext } from '../../lib/contexts';
   import { getPrimaryToast } from '../../lib/toasts';
-  import { modalNewLayer } from '../modals';
+  import { modalNewBasemapLayer, modalNewObjectLayer } from '../modals';
   import { modalStore, type ModalSettings, toastStore } from '@skeletonlabs/skeleton';
-  import type { AppObjectLayer } from '../../lib/layers/object';
+  import { addObjectLayer, type AppObjectLayer } from '../../lib/layers/object';
   import Droppable from './reorder-dnd/Droppable.svelte';
   import Layer from './LayerListItem.svelte';
 
   const { mapContext, layersContext, selectedLayerContext } = getMapLayersContext();
 
-  const addNewTileLayer = (layer: AppBasemapLayer) => {
+  const addNewObjectLayer = (layer: AppObjectLayer) => {
+    if (!layer) {
+      return;
+    }
+    layersContext.update(layers => ({ ...layers, objects: addObjectLayer($mapContext, layers.objects, layer) }));
+    selectedLayerContext.set(layer);
+    toastStore.trigger(getPrimaryToast(`Layer "${layer.name}" has been added to map`));
+  };
+
+  const addNewBasemapLayer = (layer: AppBasemapLayer) => {
     if (!layer) {
       return;
     }
     layersContext.update(layers => ({ ...layers, basemaps: addBasemapLayer($mapContext, layers.basemaps, layer) }));
     selectedLayerContext.set(layer);
-    toastStore.trigger(getPrimaryToast(`Layer "${layer.name}" has been added to map`));
+    toastStore.trigger(getPrimaryToast(`Basemap "${layer.name}" has been added to map`));
   };
 
-  const newLayerModal: ModalSettings = {
+  const newObjectLayerModal: ModalSettings = {
     type: 'component',
-    component: modalNewLayer,
-    response: addNewTileLayer
+    component: modalNewObjectLayer,
+    response: addNewObjectLayer
+  };
+
+  const newBasemapLayerModal: ModalSettings = {
+    type: 'component',
+    component: modalNewBasemapLayer,
+    response: addNewBasemapLayer
   };
 
   let reorderDragging: AppMapLayerType|undefined = undefined;
@@ -78,7 +93,7 @@
   <h1 class="text-lg whitespace-nowrap">
     Layers
     <div class="float-right">
-      <button class="btn btn-sm variant-filled-primary">
+      <button class="btn btn-sm variant-filled-primary" on:click={() => modalStore.trigger(newObjectLayerModal)}>
         <i class="fa fa-plus"></i>
       </button>
     </div>
@@ -96,7 +111,7 @@
   <h1 class="text-lg whitespace-nowrap">
     Basemaps
     <div class="float-right">
-      <button class="btn btn-sm variant-filled-primary" on:click={() => modalStore.trigger(newLayerModal)}>
+      <button class="btn btn-sm variant-filled-primary" on:click={() => modalStore.trigger(newBasemapLayerModal)}>
         <i class="fa fa-plus"></i>
       </button>
     </div>

@@ -1,6 +1,6 @@
 import { removeLayerIndex } from './default';
 import type { AppFeatureLayer } from './feature';
-import type { FeatureGroup, Map } from 'leaflet';
+import { FeatureGroup, type Map } from 'leaflet';
 
 export type AppObjectLayer = AppFeatureLayer;
 
@@ -15,6 +15,9 @@ export const addObjectLayer = (map: Map, layers: AppObjectLayer[], newLayer: App
     return;
   }
   map.addLayer(newLayer.leafletLayer);
+  if (newLayer.leafletLayer instanceof FeatureGroup) {
+    map.fitBounds((newLayer.leafletLayer as FeatureGroup).getBounds());
+  }
   layers = [newLayer, ...layers];
   return layers;
 };

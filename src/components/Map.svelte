@@ -6,6 +6,7 @@
   import { addBasemapLayer, createBasemapLayer } from '../lib/layers/basemap';
   import { createFeatureLayer } from '../lib/layers/feature';
   import { addObjectLayer } from '../lib/layers/object';
+    import type { FeatureCollection } from 'geojson';
 
   const { mapContext, layersContext } = getMapLayersContext();
 
@@ -14,7 +15,7 @@
     map.setView([18.78911, 98.98514], 13);
 
     const defaultLayer = createBasemapLayer('OSM Basemap', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png');
-    const featureLayer = createFeatureLayer('Point', {
+    const feature1: FeatureCollection = {
       type: 'FeatureCollection',
       features: [
         {
@@ -33,8 +34,8 @@
           properties: {}
         }
       ]
-    });
-    const featureLayer2 = createFeatureLayer('Line', {
+    };
+    const feature2: FeatureCollection = {
       type: 'FeatureCollection',
       features: [
         {
@@ -67,8 +68,8 @@
           properties: {}
         }
       ]
-    });
-    const featureLayer3 = createFeatureLayer('Polygon', {
+    };
+    const feature3: FeatureCollection = {
       type: 'FeatureCollection',
       features: [
         {
@@ -103,7 +104,10 @@
           properties: {}
         }
       ]
-    })
+    };
+    const featureLayer = createFeatureLayer('Point', feature1);
+    const featureLayer2 = createFeatureLayer('Line', feature2);
+    const featureLayer3 = createFeatureLayer('Polygon', feature3)
 
     mapContext.set(map);
     layersContext.update(layers => {

@@ -57,7 +57,7 @@
   });
 </script>
 
-<Modal /><Toast />
+<Modal zIndex="z-[1001]" /><Toast zIndex="z-[1002]" />
 <AppShell
   slotSidebarLeft={showLeftBar ? 'w-32 sm:w-48 lg:w-60' : 'w-2'}
   slotSidebarRight={$selectedLayerContext ? (showRightBar ? 'w-48 sm:w-52 lg:w-72' : 'w-2') : 'hidden'}
