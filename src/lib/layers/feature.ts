@@ -1,7 +1,9 @@
-import type { Feature, FeatureCollection, Geometry, MultiPoint, Point } from 'geojson';
 import { AppMapLayerType, type AppMapLayer } from './default';
 import { FeatureGroup, LatLng, geoJSON, type Layer, CircleMarker } from 'leaflet';
 import type { AppObjectLayer } from './object';
+import type { Feature, FeatureCollection, GeoJSON, Geometry, MultiPoint, Point } from 'geojson';
+import { wkxFeaturesToFeatureCollection, type WKXFeatures, rawIsWKX, rawWKXToData, appFeatureLayerDataIsWKX, wkxFeaturesGetGeometryType, wkxGetFeaturesCount } from './feature-wkx';
+import { appFeatureLayerDataIsGeoJSON, geoJSONDataToFeatureCollection, geoJSONGetFeaturesCount, geoJSONGetGeometryType, rawGeoJSONToData, rawIsGeoJSON } from './feature-geojson';
 
 const getFeaturePoint = (feature: Feature<Point>): Layer => new CircleMarker(
   new LatLng(feature.geometry.coordinates[1], feature.geometry.coordinates[0]), {
@@ -31,69 +33,65 @@ const getLeafletLayerFromFeatureCollection = (featureCollection: FeatureCollecti
   return new FeatureGroup(layers);
 };
 
+export enum AppFeatureLayerDataType {
+  GeoJSON, WKT, WKBHex, WKBBase64, Unknown
+};
+
+export type AppFeatureLayerData = FeatureCollection|Feature|Geometry|WKXFeatures;
+
 export type AppFeatureLayerOptions = {
   url?: string,
-  data: FeatureCollection|Feature|Geometry
+  data: AppFeatureLayerData
 };
 
 export type AppFeatureLayer = AppMapLayer & {
   type: AppMapLayerType.FeatureLayer,
   options: AppFeatureLayerOptions
-}
+};
 
-export const createFeatureLayer = (name: string, data: any, url?: string): AppObjectLayer => ({
-  name,
-  type: AppMapLayerType.FeatureLayer,
-  visible: true,
-  leafletLayer: getLeafletLayerFromFeatureCollection(getFeatureCollectionFromObject(data)),
-  options: { data, url }
-});
+export const rawToAppFeatureLayerType = (raw: string): AppFeatureLayerDataType => {
+  if (rawIsGeoJSON(raw)) return AppFeatureLayerDataType.GeoJSON;
+  if (rawIsWKX(raw)) return AppFeatureLayerDataType.WKT;
+  return AppFeatureLayerDataType.Unknown;
+};
+
+export const rawToAppFeatureLayerData = (raw: string): AppFeatureLayerData => {
+  if (rawIsGeoJSON(raw)) return rawGeoJSONToData(raw);
+  if (rawIsWKX(raw)) return rawWKXToData(raw);
+  throw new Error('Unable to interpret input data');
+};
 
 export const getGeometryType = (layer: AppFeatureLayer): string => {
   if (!layer || !layer.options.data) {
     return 'Empty';
   }
-  if (layer.options.data.type === 'FeatureCollection') {
-    let type: string;
-    for (const feature of layer.options.data.features) {
-      if (type && feature.geometry.type !== type) {
-        return 'Mixed Feature Collection';
-      }
-      type = feature.geometry.type;
-    }
-    return `${type ?? 'Empty'} Feature Collection`;
-  }
-  if (layer.options.data.type === 'Feature') {
-    return `Single ${layer.options.data.geometry.type} Feature`;
-  }
-  if (layer.options.data.type) {
-    return `Single ${layer.options.data.type} Geometry`;
-  }
+  if (appFeatureLayerDataIsGeoJSON(layer.options.data)) { return geoJSONGetGeometryType(layer.options.data as GeoJSON); }
+  if (appFeatureLayerDataIsWKX(layer.options.data)) { return wkxFeaturesGetGeometryType(layer.options.data as WKXFeatures); }
   return 'Unknown Type'
 };
 
-export const getFeaturesCount = (layer: AppFeatureLayer): number => layer && layer.options.data && layer.options.data.type === 'FeatureCollection' ?
-  layer.options.data.features.length : 0;
-
-export const getFeatureCollectionFromObject = (obj: any): FeatureCollection => {
-  if (!obj.type) throw new Error('Property type is required in the object');
-  if (obj.type === 'FeatureCollection') return obj;
-  if (obj.type === 'Feature') return { type: 'FeatureCollection', features: [obj] };
-  if (
-    obj.type === 'Point'
-    || obj.type === 'MultiPoint'
-    || obj.type === 'LineString'
-    || obj.type === 'MultiLineString'
-    || obj.type === 'Polygon'
-    || obj.type === 'MultiPolygon'
-    || obj.type === 'GeometryCollection'
-  ) return {
-    type: 'FeatureCollection',
-    features: [{
-      type: 'Feature',
-      geometry: obj,
-      properties: {}
-    }]
-  };
-  throw new Error(`Unknown GeoJSON type ${obj.type}`);
+export const getFeaturesCount = (layer: AppFeatureLayer): number => {
+  if (!layer || !layer.options.data) {
+    return 0;
+  }
+  if (appFeatureLayerDataIsGeoJSON(layer.options.data)) { return geoJSONGetFeaturesCount(layer.options.data as GeoJSON); }
+  if (appFeatureLayerDataIsWKX(layer.options.data)) { return wkxGetFeaturesCount(layer.options.data as WKXFeatures); }
+  return 0;
 };
+
+const getFeatureCollectionFromObject = (data: AppFeatureLayerData): FeatureCollection => {
+  if (!data.type) throw new Error('Property type is required in the object');
+  if (appFeatureLayerDataIsGeoJSON(data)) { return geoJSONDataToFeatureCollection(data as GeoJSON); }
+  if (appFeatureLayerDataIsWKX(data)) { return wkxFeaturesToFeatureCollection(data as WKXFeatures); }
+  throw new Error(`Unknown GeoJSON type ${(data as any).type}`);
+};
+
+export const createFeatureLayer = (name: string, data: AppFeatureLayerData, url?: string): AppObjectLayer => ({
+  name,
+  type: AppMapLayerType.FeatureLayer,
+  visible: true,
+  leafletLayer: getLeafletLayerFromFeatureCollection(
+    getFeatureCollectionFromObject(data)
+  ),
+  options: { data, url }
+});

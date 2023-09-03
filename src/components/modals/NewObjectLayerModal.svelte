@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createFeatureLayer } from '../../lib/layers/feature';
+  import { AppFeatureLayerDataType, createFeatureLayer, rawToAppFeatureLayerData, rawToAppFeatureLayerType } from '../../lib/layers/feature';
   import { getExceptionErrorToast } from '../../lib/toasts';
   import { FileDropzone, modalStore, toastStore } from '@skeletonlabs/skeleton';
   import type { AppObjectLayer } from '../../lib/layers/object';
@@ -12,10 +12,11 @@
   };
 
   let mode: InputMode = InputMode.URL;
+  let type: AppFeatureLayerDataType = undefined;
   let name: string = '';
-  let url: string;
-  let files: FileList;
-  let text: string;
+  let url: string = undefined;
+  let files: FileList = undefined;
+  let text: string = undefined;
   let loading: boolean = false;
   let valid: boolean = false;
 
@@ -38,13 +39,15 @@
   };
 
   $: if (mode || url || files || text) {
+    type = undefined;
     if (mode === InputMode.URL) {
       valid = /^http[s]?:\/\/.*/g.test(url);
     } else if (mode === InputMode.File) {
       valid = (files && files.length && files.item(0)) ? true : false;
       filesChanged();
     } else if (mode === InputMode.Text) {
-      valid = text.trim() ? true: false;
+      type = rawToAppFeatureLayerType(text);
+      valid = type !== AppFeatureLayerDataType.Unknown ? true: false;
     }
   } else {
     valid = false;
@@ -69,9 +72,9 @@
       fileReader.readAsText(file);
       fileReader.onload = e => {
         try {
-          const data = e.target.result;
-          const obj = JSON.parse(data.toString());
-          resolve(createFeatureLayer(name, obj));
+          const content = e.target.result.toString();
+          const data = rawToAppFeatureLayerData(content);
+          resolve(createFeatureLayer(name, data));
         } catch (ex) {
           reject(ex);
         }
@@ -82,8 +85,8 @@
   });
 
   const getLayerFromText = (): AppObjectLayer => {
-    const obj = JSON.parse(text);
-    return createFeatureLayer(name, obj);
+    const data = rawToAppFeatureLayerData(text);
+    return createFeatureLayer(name, data);
   };
 
   const submit = async() => {
@@ -169,7 +172,17 @@
           <FileDropzone name="files" multiple="false" on:change={filesChanged} bind:files={files} disabled={loading} />
         {/if}
       {:else if mode === InputMode.Text}
-      <textarea class="input w-100 h-72 font-mono" bind:value={text} disabled={loading}></textarea>
+        <textarea class="input w-100 h-72 font-mono" bind:value={text} disabled={loading}></textarea>
+        <div>
+          <strong>Input Type:</strong>
+          {#if type === AppFeatureLayerDataType.Unknown}
+            Unknown
+          {:else if type === AppFeatureLayerDataType.GeoJSON}
+            GeoJSON
+          {:else if type === AppFeatureLayerDataType.WKT}
+            Well-Known Text (WKT)
+          {/if}
+        </div>
       {/if}
     </section>
     <footer class="card-footer text-right">

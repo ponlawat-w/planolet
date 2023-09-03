@@ -15,106 +15,10 @@
     map.setView([18.78911, 98.98514], 13);
 
     const defaultLayer = createBasemapLayer('OSM Basemap', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png');
-    const feature1: FeatureCollection = {
-      type: 'FeatureCollection',
-      features: [
-        {
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [98.98546, 18.78852]
-          },
-          properties: {}
-        }, {
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [98.98675, 18.78706]
-          },
-          properties: {}
-        }
-      ]
-    };
-    const feature2: FeatureCollection = {
-      type: 'FeatureCollection',
-      features: [
-        {
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: [
-              [
-                98.98008,
-                18.79000
-              ],
-              [
-                98.98384,
-                18.78714
-              ],
-              [
-                98.99128,
-                18.78662
-              ],
-              [
-                98.99231,
-                18.79070
-              ],
-              [
-                98.98671,
-                18.79418
-              ]
-            ]
-          },
-          properties: {}
-        }
-      ]
-    };
-    const feature3: FeatureCollection = {
-      type: 'FeatureCollection',
-      features: [
-        {
-          type: 'Feature',
-          geometry: {
-            type: 'Polygon',
-            coordinates: [
-              [
-                [
-                  98.97846,
-                  18.79580
-                ],
-                [
-                  98.97766,
-                  18.78162
-                ],
-                [
-                  98.99286,
-                  18.78116
-                ],
-                [
-                  98.99360,
-                  18.79534
-                ],
-                [
-                  98.97846,
-                  18.79580
-                ]
-              ]
-            ]
-          },
-          properties: {}
-        }
-      ]
-    };
-    const featureLayer = createFeatureLayer('Point', feature1);
-    const featureLayer2 = createFeatureLayer('Line', feature2);
-    const featureLayer3 = createFeatureLayer('Polygon', feature3)
 
     mapContext.set(map);
     layersContext.update(layers => {
       layers = { ...layers, basemaps: addBasemapLayer(map, layers.basemaps, defaultLayer) };
-      layers = { ...layers, objects: addObjectLayer(map, layers.objects, featureLayer3) };
-      layers = { ...layers, objects: addObjectLayer(map, layers.objects, featureLayer2) };
-      layers = { ...layers, objects: addObjectLayer(map, layers.objects, featureLayer) };
       return layers;
     });
   });

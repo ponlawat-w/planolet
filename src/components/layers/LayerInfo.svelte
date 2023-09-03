@@ -92,7 +92,9 @@
       <textarea class="textarea font-mono text-xs mb-2" style="cursor: default !important;"
         value={selectedBasemapLayer.options.url ?? ''} readonly></textarea>
       <hr class="mb-2">
-    {:else if selectedFeatureLayer && selectedFeatureLayer.options.data && selectedFeatureLayer.options.data.type === 'FeatureCollection'}
+    {:else if selectedFeatureLayer && selectedFeatureLayer.options.data
+      && selectedFeatureLayer.options.data.type === 'FeatureCollection'
+      || selectedFeatureLayer.options.data.type === 'WKT'}
       <p class="pb-2">
         {featuresCount} feature{featuresCount === 1 ? '' : 's'} in this layer.
       </p>
