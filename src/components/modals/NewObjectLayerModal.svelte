@@ -180,7 +180,7 @@
           {:else if type === AppFeatureLayerDataType.GeoJSON}
             GeoJSON
           {:else if type === AppFeatureLayerDataType.WKT}
-            Well-Known Text (WKT)
+            Well-Known Geometry (WKT or WKB)
           {/if}
         </div>
       {/if}

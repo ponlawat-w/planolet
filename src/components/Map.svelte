@@ -4,9 +4,6 @@
   import { map as initialiseMap } from 'leaflet';
   import { onMount } from 'svelte';
   import { addBasemapLayer, createBasemapLayer } from '../lib/layers/basemap';
-  import { createFeatureLayer } from '../lib/layers/feature';
-  import { addObjectLayer } from '../lib/layers/object';
-    import type { FeatureCollection } from 'geojson';
 
   const { mapContext, layersContext } = getMapLayersContext();
 

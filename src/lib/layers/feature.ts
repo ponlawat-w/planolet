@@ -1,12 +1,12 @@
 import { AppMapLayerType, type AppMapLayer } from './default';
 import { FeatureGroup, LatLng, geoJSON, type Layer, CircleMarker } from 'leaflet';
 import type { AppObjectLayer } from './object';
-import type { Feature, FeatureCollection, GeoJSON, Geometry, MultiPoint, Point } from 'geojson';
+import type { Feature, FeatureCollection, GeoJSON, Geometry, GeometryObject, MultiPoint, Point } from 'geojson';
 import { wkxFeaturesToFeatureCollection, type WKXFeatures, rawIsWKX, rawWKXToData, appFeatureLayerDataIsWKX, wkxFeaturesGetGeometryType, wkxGetFeaturesCount } from './feature-wkx';
 import { appFeatureLayerDataIsGeoJSON, geoJSONDataToFeatureCollection, geoJSONGetFeaturesCount, geoJSONGetGeometryType, rawGeoJSONToData, rawIsGeoJSON } from './feature-geojson';
 
-const getFeaturePoint = (feature: Feature<Point>): Layer => new CircleMarker(
-  new LatLng(feature.geometry.coordinates[1], feature.geometry.coordinates[0]), {
+const getPointCircle = (coordinates: number[]): Layer => new CircleMarker(
+  new LatLng(coordinates[1], coordinates[0]), {
     fill: true,
     fillColor: '#ff0000',
     radius: 4,
@@ -15,20 +15,23 @@ const getFeaturePoint = (feature: Feature<Point>): Layer => new CircleMarker(
   }
 );
 
+const geometryToLayers = (geometry: GeometryObject): Layer[] => {
+  if (geometry.type === 'Point') {
+    return [getPointCircle(geometry.coordinates)];
+  }
+  if (geometry.type === 'MultiPoint') {
+    return geometry.coordinates.map(x => getPointCircle(x));
+  }
+  if (geometry.type === 'GeometryCollection') {
+    return geometry.geometries.map(x => geometryToLayers(x)).flat();
+  }
+  return [geoJSON(geometry)];
+};
+
 const getLeafletLayerFromFeatureCollection = (featureCollection: FeatureCollection): Layer => {
   const layers: Layer[] = [];
   for (const feature of featureCollection.features) {
-    if (feature.geometry.type === 'Point') {
-      layers.push(getFeaturePoint(feature as Feature<Point>));
-      continue;
-    }
-    if (feature.geometry.type === 'MultiPoint') {
-      for (const coordinates of (feature as Feature<MultiPoint>).geometry.coordinates) {
-        layers.push(getFeaturePoint({ type: 'Feature', geometry: { type: 'Point', coordinates }, properties: feature.properties }));
-      }
-      continue;
-    }
-    layers.push(geoJSON(feature));
+    layers.push(...geometryToLayers(feature.geometry));
   }
   return new FeatureGroup(layers);
 };
