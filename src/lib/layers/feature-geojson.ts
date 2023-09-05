@@ -1,5 +1,5 @@
 import type { FeatureCollection } from 'geojson';
-import type { AppFeatureLayerData } from './feature';
+import type { AppFeatureLayerData, AttributedFeature } from './feature';
 
 export const appFeatureLayerDataIsGeoJSON = (data: AppFeatureLayerData): boolean => data.type && (
   data.type === 'FeatureCollection'
@@ -65,4 +65,10 @@ export const geoJSONDataToFeatureCollection = (data: AppFeatureLayerData): Featu
     }]
   };
   throw new Error('Data is not GeoJSON');
+};
+
+export const geoJSONToAttributedFeatures = (data: AppFeatureLayerData): AttributedFeature[] => {
+  if (data.type === 'Feature') return [data];
+  if (data.type === 'FeatureCollection') return data.features;
+  return [];
 };

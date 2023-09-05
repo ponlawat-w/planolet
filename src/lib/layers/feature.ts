@@ -1,9 +1,16 @@
 import { AppMapLayerType, type AppMapLayer } from './default';
 import { FeatureGroup, LatLng, geoJSON, type Layer, CircleMarker } from 'leaflet';
 import type { AppObjectLayer } from './object';
-import type { Feature, FeatureCollection, GeoJSON, Geometry, GeometryObject, MultiPoint, Point } from 'geojson';
-import { wkxFeaturesToFeatureCollection, type WKXFeatures, rawIsWKX, rawWKXToData, appFeatureLayerDataIsWKX, wkxFeaturesGetGeometryType, wkxGetFeaturesCount } from './feature-wkx';
-import { appFeatureLayerDataIsGeoJSON, geoJSONDataToFeatureCollection, geoJSONGetFeaturesCount, geoJSONGetGeometryType, rawGeoJSONToData, rawIsGeoJSON } from './feature-geojson';
+import type { Feature, FeatureCollection, GeoJSON, Geometry, GeometryObject } from 'geojson';
+import { wkxFeaturesToFeatureCollection, type WKXFeatures, rawIsWKX, rawWKXToData, appFeatureLayerDataIsWKX, wkxFeaturesGetGeometryType, wkxGetFeaturesCount, wkxToAttributedFeatures } from './feature-wkx';
+import { appFeatureLayerDataIsGeoJSON,
+  geoJSONDataToFeatureCollection,
+  geoJSONGetFeaturesCount,
+  geoJSONGetGeometryType,
+  geoJSONToAttributedFeatures,
+  rawGeoJSONToData,
+  rawIsGeoJSON
+} from './feature-geojson';
 
 const getPointCircle = (coordinates: number[]): Layer => new CircleMarker(
   new LatLng(coordinates[1], coordinates[0]), {
@@ -39,6 +46,8 @@ const getLeafletLayerFromFeatureCollection = (featureCollection: FeatureCollecti
 export enum AppFeatureLayerDataType {
   GeoJSON, WKT, WKBHex, WKBBase64, Unknown
 };
+
+export type AttributedFeature = Record<string, any> & { properties: Record<string, any> };
 
 export type AppFeatureLayerData = FeatureCollection|Feature|Geometry|WKXFeatures;
 
@@ -98,3 +107,20 @@ export const createFeatureLayer = (name: string, data: AppFeatureLayerData, url?
   ),
   options: { data, url }
 });
+
+export const getAttributedFeatures = (data: AppFeatureLayerData): AttributedFeature[] => {
+  if (appFeatureLayerDataIsGeoJSON(data)) { return geoJSONToAttributedFeatures(data); }
+  if (appFeatureLayerDataIsWKX(data)) { return wkxToAttributedFeatures(data as WKXFeatures); }
+  return [];
+}
+
+export const getAttributeHeaders = (features: AttributedFeature[]): string[] => ['#', ...(
+  features.reduce((set, feature) => {
+    for (const key of Object.keys(feature.properties ?? {})) {
+      set.add(key);
+    }
+    return set;
+  }, new Set<string>)
+)];
+
+export const getFeatureAttributeData = (features: AttributedFeature[]): any[] => features.map((x, i) => ({...x.properties, '#': i.toString()}));

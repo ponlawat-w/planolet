@@ -173,14 +173,26 @@
         {/if}
       {:else if mode === InputMode.Text}
         <textarea class="input w-100 h-72 font-mono" bind:value={text} disabled={loading}></textarea>
+        <div class="text-xs text-tertiary-900">
+          <i class="fa fa-info-circle text-primary-500"></i>
+          Supports: GeoJSON / Well-Known Text (WKT) / Well-Known Bytes (WKB) in Hex or Base64 string
+        </div>
         <div>
           <strong>Input Type:</strong>
           {#if type === AppFeatureLayerDataType.Unknown}
-            Unknown
-          {:else if type === AppFeatureLayerDataType.GeoJSON}
-            GeoJSON
-          {:else if type === AppFeatureLayerDataType.WKT}
-            Well-Known Geometry (WKT or WKB)
+            <span class="text-error-500">
+              <i class="fa fa-times-circle"></i>
+              Invalid
+            </span>
+          {:else}
+            <span class="text-success-700">
+              <i class="fa fa-check-circle"></i>
+              {#if type === AppFeatureLayerDataType.GeoJSON}
+              GeoJSON
+              {:else if type === AppFeatureLayerDataType.WKT}
+              Well-Known Geometry (WKT or WKB)
+              {/if}
+            </span>
           {/if}
         </div>
       {/if}

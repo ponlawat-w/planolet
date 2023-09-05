@@ -1,14 +1,16 @@
 import { Buffer } from 'buffer';
 import { Geometry } from '../wkx';
-import type { AppFeatureLayerData } from './feature';
+import type { AppFeatureLayerData, AttributedFeature } from './feature';
 import type { FeatureCollection, GeometryObject } from 'geojson';
 
-export type WKTFeature = {
+export type WKXFeatureBase = { properties: Record<string, any> };
+
+export type WKTFeature = WKXFeatureBase & {
   type: 'WKT',
   data: string
 };
 
-export type WKBFeature = {
+export type WKBFeature = WKXFeatureBase & {
   type: 'WKB',
   encoding: 'hex'|'base64',
   data: Uint8Array
@@ -32,21 +34,21 @@ export const rawIsWKX = (raw: string): boolean => {
 const strToWKT = (str: string): WKTFeature|undefined => {
   try {
     Geometry.parse(str);
-    return { type: 'WKT', data: str };
+    return { type: 'WKT', data: str, properties: {} };
   } catch { return undefined; }
 };
 const strToHexWKB = (str: string): WKBFeature|undefined => {
   try {
     const bytes = Uint8Array.from(str.match(/.{1,2}/g).map(x => parseInt(x, 16)));
     Geometry.parse(Buffer.from(bytes));
-    return { type: 'WKB', encoding: 'hex', data: bytes };
+    return { type: 'WKB', encoding: 'hex', data: bytes, properties: {} };
   } catch { return undefined; }
 };
 const strToBase64WKB = (str: string): WKBFeature|undefined => {
   try {
     const bytes = Uint8Array.from(atob(str), x => x.charCodeAt(0));
     Geometry.parse(Buffer.from(bytes));
-    return { type: 'WKB', encoding: 'base64', data: bytes };
+    return { type: 'WKB', encoding: 'base64', data: bytes, properties: {} };
   } catch { return undefined; }
 };
 
@@ -97,3 +99,5 @@ export const wkxFeaturesToFeatureCollection = (wkxFeatures: WKXFeatures): Featur
     geometry: wkxFeatureToGeoJSONGeometry(x)
   }))
 });
+
+export const wkxToAttributedFeatures = (data: WKXFeatures): AttributedFeature[] => data.features;

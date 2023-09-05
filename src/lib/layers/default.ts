@@ -6,8 +6,8 @@ import { modalStore, toastStore } from '@skeletonlabs/skeleton';
 import { getPrimaryToast } from '../toasts';
 
 export enum AppMapLayerType {
-  BasemapLayer,
-  FeatureLayer
+  BasemapLayer = 1,
+  FeatureLayer = 2
 };
 
 export type AppMapLayer = {

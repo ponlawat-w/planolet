@@ -94,7 +94,7 @@
       <hr class="mb-2">
     {:else if selectedFeatureLayer && selectedFeatureLayer.options.data
       && selectedFeatureLayer.options.data.type === 'FeatureCollection'
-      || selectedFeatureLayer.options.data.type === 'WKT'}
+      || selectedFeatureLayer.options.data.type === 'WKX'}
       <p class="pb-2">
         {featuresCount} feature{featuresCount === 1 ? '' : 's'} in this layer.
       </p>
