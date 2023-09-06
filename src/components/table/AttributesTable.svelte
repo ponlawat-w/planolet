@@ -1,28 +1,21 @@
 <script lang="ts">
-  import { AppMapLayerType } from '../../lib/layers/default';
+  import { AppFeatureLayerBase } from '../../lib/layers/features/base';
   import { getMapLayersContext } from '../../lib/contexts';
   import { Table, tableMapperValues, type TableSource } from '@skeletonlabs/skeleton';
-  import { getAttributedFeatures, type AppFeatureLayer, getAttributeHeaders, getFeatureAttributeData } from '../../lib/layers/feature';
 
   const { selectedLayerContext } = getMapLayersContext();
 
   let tableSource: TableSource = undefined;
   const refreshTableSource = () => {
-    if (!$selectedLayerContext || $selectedLayerContext.type !== AppMapLayerType.FeatureLayer) {
+    if (!$selectedLayerContext || !($selectedLayerContext instanceof AppFeatureLayerBase)) {
       tableSource = undefined;
       return;
     }
-    const selectedFeatureLayer: AppFeatureLayer = $selectedLayerContext as AppFeatureLayer;
-    const features = getAttributedFeatures(selectedFeatureLayer.options.data);
-    if (features.length) {
-      const headers = getAttributeHeaders(features);
-      tableSource = {
-        head: headers,
-        body: tableMapperValues(getFeatureAttributeData(features), headers)
-      };
-    } else {
-      tableSource = undefined;
-    }
+    const attributesTable = $selectedLayerContext.getAttributeTables();
+    tableSource = {
+      head: attributesTable.headers,
+      body: tableMapperValues(attributesTable.body, attributesTable.headers)
+    };
   };
 
   $: if ($selectedLayerContext) {

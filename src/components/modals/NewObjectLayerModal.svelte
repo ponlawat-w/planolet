@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { AppFeatureLayerDataType, createFeatureLayer, rawToAppFeatureLayerData, rawToAppFeatureLayerType } from '../../lib/layers/feature';
-  import { getExceptionErrorToast } from '../../lib/toasts';
+  import { AppFeatureLayer, AppFeatureLayerDataType } from '../../lib/layers/features/feature';
   import { FileDropzone, modalStore, toastStore } from '@skeletonlabs/skeleton';
+  import { getExceptionErrorToast } from '../../lib/toasts';
   import type { AppObjectLayer } from '../../lib/layers/object';
   import type { ModalParent } from '../../types';
 
@@ -12,7 +12,7 @@
   };
 
   let mode: InputMode = InputMode.URL;
-  let type: AppFeatureLayerDataType = undefined;
+  let type: AppFeatureLayerDataType = AppFeatureLayerDataType.Unknown;
   let name: string = '';
   let url: string = undefined;
   let files: FileList = undefined;
@@ -39,14 +39,14 @@
   };
 
   $: if (mode || url || files || text) {
-    type = undefined;
+    type = AppFeatureLayerDataType.Unknown;
     if (mode === InputMode.URL) {
       valid = /^http[s]?:\/\/.*/g.test(url);
     } else if (mode === InputMode.File) {
       valid = (files && files.length && files.item(0)) ? true : false;
       filesChanged();
     } else if (mode === InputMode.Text) {
-      type = rawToAppFeatureLayerType(text);
+      type = AppFeatureLayer.rawToType(text);
       valid = type !== AppFeatureLayerDataType.Unknown ? true: false;
     }
   } else {
@@ -58,8 +58,7 @@
     if (!response.ok) {
       throw new Error(response.status.toString());
     }
-    const data = await response.json();
-    return createFeatureLayer(name, data, url);
+    return AppFeatureLayer.createFromRaw(name, await response.text());
   };
 
   const getLayerFromFile = (): Promise<AppObjectLayer> => new Promise((resolve, reject) => {
@@ -73,8 +72,7 @@
       fileReader.onload = e => {
         try {
           const content = e.target.result.toString();
-          const data = rawToAppFeatureLayerData(content);
-          resolve(createFeatureLayer(name, data));
+          resolve(AppFeatureLayer.createFromRaw(name, content));
         } catch (ex) {
           reject(ex);
         }
@@ -85,8 +83,7 @@
   });
 
   const getLayerFromText = (): AppObjectLayer => {
-    const data = rawToAppFeatureLayerData(text);
-    return createFeatureLayer(name, data);
+    return AppFeatureLayer.createFromRaw(name, text);
   };
 
   const submit = async() => {
@@ -189,7 +186,7 @@
               <i class="fa fa-check-circle"></i>
               {#if type === AppFeatureLayerDataType.GeoJSON}
               GeoJSON
-              {:else if type === AppFeatureLayerDataType.WKT}
+              {:else if type === AppFeatureLayerDataType.WKX}
               Well-Known Geometry (WKT or WKB)
               {/if}
             </span>

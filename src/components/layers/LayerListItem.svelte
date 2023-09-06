@@ -1,11 +1,11 @@
 <script lang="ts">
   import { getMapLayersContext } from '../../lib/contexts';
-  import { askToRemoveLayer, toggleLayerVisibility, type AppMapLayer } from '../../lib/layers/default';
+  import type { AppMapLayer } from '../../lib/layers/layer';
 
   export let layer: AppMapLayer;
   export let dragFocused: boolean = false;
 
-  const { mapContext, layersContext, selectedLayerContext } = getMapLayersContext();
+  const { layersContext, selectedLayerContext } = getMapLayersContext();
   let selected: boolean = false;
   $: selected = $selectedLayerContext === layer;
 
@@ -35,7 +35,7 @@
       </button>
       <button type="button" class="cursor-pointer text-primary-500 hover:drop-shadow-md hover:text-primary-700"
         class:text-surface-500={dragFocused}
-        on:click={() => toggleLayerVisibility(layer, $mapContext, layersContext)}>
+        on:click={() => $layersContext.toggleLayerVisibility(layer)}>
         <i class="fa-circle" class:fa-solid={layer.visible} class:fa-regular={!layer.visible}></i>
       </button>
       <a href={'javascript:void(0);'} on:click={selectLayer} class="hover:underline" class:text-surface-500={dragFocused}>
@@ -44,7 +44,7 @@
     </div>
     <div class="flex-none">
       <button type="button" class="btn btn-sm text-error-500 pt-2 pr-2" class:text-surface-500={dragFocused}
-        on:click={() => askToRemoveLayer(layer, $mapContext, layersContext, selectedLayerContext)}>
+        on:click={() => $layersContext.askToRemoveLayer(layer, selectedLayerContext)}>
         <i class="fa fa-times"></i>
       </button>
     </div>

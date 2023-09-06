@@ -1,8 +1,8 @@
 <script lang="ts">
+  import { AppBasemapLayer } from '../../lib/layers/basemap';
+  import { getExceptionErrorToast } from '../../lib/toasts';
   import { modalStore, toastStore } from '@skeletonlabs/skeleton';
   import type { ModalParent } from '../../types';
-  import { getExceptionErrorToast } from '../../lib/toasts';
-  import { basemapLayerUrlValid, type AppBasemapLayer, createBasemapLayer } from '../../lib/layers/basemap';
 
   export let parent: ModalParent;
 
@@ -10,7 +10,7 @@
   let url: string = '';
 
   let valid: boolean = false;
-  $: valid = basemapLayerUrlValid(url);
+  $: valid = AppBasemapLayer.urlValid(url);
   
   const submit = () => {
     if (!valid) {
@@ -18,7 +18,7 @@
     }
     try {
       name = name.trim() === '' ? 'Untitled' : name;
-      const layer: AppBasemapLayer = createBasemapLayer(name, url);
+      const layer: AppBasemapLayer = new AppBasemapLayer(name, url);
       if ($modalStore[0].response && layer) {
         $modalStore[0].response(layer);
       }

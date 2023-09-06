@@ -4,20 +4,21 @@
   import './app.postcss';
   import '@fortawesome/fontawesome-free/css/all.min.css';
   
-  import { AppBar, AppShell, Modal, Toast } from '@skeletonlabs/skeleton';
-  import { CONTEXT_LAYERS, CONTEXT_MAP, type ContextSelectedLayer, type ContextLayers, type ContextMap, CONTEXT_SELECTED_LAYER } from './lib/contexts';
   import { afterUpdate, beforeUpdate, setContext } from 'svelte';
+  import { AppBar, AppShell, Modal, Toast } from '@skeletonlabs/skeleton';
+  import { AppFeatureLayerBase } from './lib/layers/features/base';
+  import { AppLayers } from './lib/layers/layers';
+  import { CONTEXT_LAYERS, CONTEXT_MAP, type ContextSelectedLayer, type ContextLayers, type ContextMap, CONTEXT_SELECTED_LAYER } from './lib/contexts';
   import { writable } from 'svelte/store';
+  import AttributesTable from './components/table/AttributesTable.svelte';
+  import LayerInfo from './components/layers/LayerInfo.svelte';
   import LayersBar from './components/layers/LayersList.svelte';
   import Map from './components/Map.svelte';
-  import LayerInfo from './components/layers/LayerInfo.svelte';
-  import { reorderBasemapLayers } from './lib/layers/basemap';
-  import { reorderObjectLayers } from './lib/layers/object';
-  import { AppMapLayerType } from './lib/layers/default';
-  import AttributesTable from './components/table/AttributesTable.svelte';
+
+  const layers = new AppLayers();
   
   const mapContext = setContext<ContextMap>(CONTEXT_MAP, writable(undefined));
-  const layersContext = setContext<ContextLayers>(CONTEXT_LAYERS, writable({ basemaps: [], objects: [] }));
+  const layersContext = setContext<ContextLayers>(CONTEXT_LAYERS, layers.context);
   const selectedLayerContext = setContext<ContextSelectedLayer>(CONTEXT_SELECTED_LAYER, writable(undefined));
 
   let shouldRerenderLayers: boolean = false;
@@ -55,8 +56,7 @@
       lastSelectedLayer = $selectedLayerContext;
     }
     if (shouldRerenderLayers) {
-      reorderBasemapLayers($mapContext, $layersContext.basemaps);
-      reorderObjectLayers($mapContext, $layersContext.objects);
+      $layersContext.reorderLeafletDisplay();
     }
   });
 </script>
@@ -66,7 +66,7 @@
   slotPageContent="overflow-y-hidden"
   slotSidebarLeft={showLeftBar ? 'w-32 sm:w-48 lg:w-60' : 'w-2'}
   slotSidebarRight={$selectedLayerContext ? (showRightBar ? 'w-48 sm:w-52 lg:w-72' : 'w-2') : 'hidden'}
-  slotPageFooter={$selectedLayerContext && $selectedLayerContext.type === AppMapLayerType.FeatureLayer ? '' : 'hidden'}
+  slotPageFooter={$selectedLayerContext && $selectedLayerContext instanceof AppFeatureLayerBase ? '' : 'hidden'}
 >
   <svelte:fragment slot="header">
     <AppBar background="bg-success-700" class="text-white text-lg">

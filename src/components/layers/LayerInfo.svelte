@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { SlideToggle } from '@skeletonlabs/skeleton';
+  import { AppBasemapLayer } from '../../lib/layers/basemap';
+  import { AppFeatureLayerBase } from '../../lib/layers/features/base';
+  import { AppObjectLayer } from '../../lib/layers/object';
   import { getMapLayersContext } from '../../lib/contexts';
-  import { AppMapLayerType, askToRemoveLayer, toggleLayerVisibility } from '../../lib/layers/default';
-  import { getFeaturesCount, getGeometryType } from '../../lib/layers/feature';
-  import type { AppBasemapLayer } from '../../lib/layers/basemap';
-  import type { AppObjectLayer } from '../../lib/layers/object';
+  import { SlideToggle } from '@skeletonlabs/skeleton';
   import type { FeatureGroup } from 'leaflet';
 
   const { mapContext, layersContext, selectedLayerContext } = getMapLayersContext();
@@ -27,18 +26,15 @@
     visible = $selectedLayerContext.visible;
   }
 
-  let selectedBasemapLayer: AppBasemapLayer|undefined;
-  $: selectedBasemapLayer = $selectedLayerContext && $selectedLayerContext.type === AppMapLayerType.BasemapLayer ?
-    $selectedLayerContext as AppBasemapLayer : undefined;
-
-  let selectedFeatureLayer: AppObjectLayer|undefined;
-  $: selectedFeatureLayer = $selectedLayerContext && $selectedLayerContext.type === AppMapLayerType.FeatureLayer ?
-    $selectedLayerContext as AppObjectLayer : undefined;
   let featuresCount: number;
-  $: featuresCount = getFeaturesCount(selectedFeatureLayer);
+  $: if ($selectedLayerContext instanceof AppFeatureLayerBase) {
+    featuresCount = $selectedLayerContext.getFeaturesCount();
+  } else {
+    featuresCount = undefined;
+  }
 
   const zoomToLayer = () => {
-    const layer: FeatureGroup = $selectedLayerContext.leafletLayer as FeatureGroup;
+    const layer: FeatureGroup = $selectedLayerContext.leaflet as FeatureGroup;
     if (!layer) {
       return;
     }
@@ -68,39 +64,37 @@
         </h1>
       {/if}
       <div class="text-sm">
-        {#if $selectedLayerContext.type === AppMapLayerType.BasemapLayer}
+        {#if $selectedLayerContext instanceof AppBasemapLayer}
           Basemap Layer
-        {:else if $selectedLayerContext.type === AppMapLayerType.FeatureLayer}
+        {:else if $selectedLayerContext instanceof AppFeatureLayerBase}
           <div>Feature Layer</div>
-          <div class="text-xs">{getGeometryType(selectedFeatureLayer)}</div>
+          <div class="text-xs">{$selectedLayerContext.getGeometryTypeText()}</div>
         {/if}
       </div>
     </div>
     <hr class="mb-2">
     <div class="mb-2">
-      <SlideToggle name="visible" active="bg-primary-500" size="sm" bind:checked={visible} on:change={() => toggleLayerVisibility($selectedLayerContext, $mapContext, layersContext)}>
+      <SlideToggle name="visible" active="bg-primary-500" size="sm" bind:checked={visible} on:change={() => $layersContext.toggleLayerVisibility($selectedLayerContext)}>
         Visible
       </SlideToggle>
-      {#if visible && selectedFeatureLayer}
+      {#if visible && $selectedLayerContext instanceof AppObjectLayer}
         <button class="btn btn-sm float-right variant-filled-primary" on:click={zoomToLayer}>
           <i class="fa-solid fa-arrows-to-circle"></i>
         </button>
       {/if}
     </div>
     <hr class="mb-2">
-    {#if selectedBasemapLayer}
+    {#if $selectedLayerContext instanceof AppBasemapLayer}
       <textarea class="textarea font-mono text-xs mb-2" style="cursor: default !important;"
-        value={selectedBasemapLayer.options.url ?? ''} readonly></textarea>
+        value={$selectedLayerContext.url} readonly></textarea>
       <hr class="mb-2">
-    {:else if selectedFeatureLayer && selectedFeatureLayer.options.data
-      && selectedFeatureLayer.options.data.type === 'FeatureCollection'
-      || selectedFeatureLayer.options.data.type === 'WKX'}
+    {:else if featuresCount !== undefined}
       <p class="pb-2">
         {featuresCount} feature{featuresCount === 1 ? '' : 's'} in this layer.
       </p>
       <hr class="mb-2">
     {/if}
-    <button class="btn btn-sm w-full variant-filled-error" on:click={() => askToRemoveLayer($selectedLayerContext, $mapContext, layersContext, selectedLayerContext)}>
+    <button class="btn btn-sm w-full variant-filled-error" on:click={() => $layersContext.askToRemoveLayer($selectedLayerContext, selectedLayerContext)}>
       <i class="fa fa-trash mr-2"></i>
       Remove Layer
     </button>
