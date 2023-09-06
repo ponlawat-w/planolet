@@ -1,3 +1,3 @@
-import { AppMapLayer } from './layer';
+import { AppMapLayer } from './map-layer';
 
 export class AppObjectLayer extends AppMapLayer {};

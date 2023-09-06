@@ -3,7 +3,7 @@ import { AppObjectLayer } from './object';
 import { getPrimaryToast } from '../toasts';
 import { modalStore, toastStore } from '@skeletonlabs/skeleton';
 import { writable } from 'svelte/store';
-import type { AppMapLayer } from './layer';
+import type { AppMapLayer } from './map-layer';
 import type { ContextLayers, ContextSelectedLayer } from '../contexts';
 import type { FeatureGroup, Map } from 'leaflet';
 

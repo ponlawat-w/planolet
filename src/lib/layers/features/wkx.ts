@@ -2,6 +2,7 @@ import { AppFeatureLayerBase, type AttributedFeature } from './base';
 import { Buffer } from 'buffer';
 import { Geometry } from '../../wkx';
 import type { FeatureCollection, Geometry as GeoJSONGeometry } from 'geojson';
+import { DataTable } from '../../table';
 
 export type WKXFeatureBase = { properties: Record<string, any> };
 
@@ -61,8 +62,8 @@ export class AppWKXLayer extends AppFeatureLayerBase<WKXFeatures> {
     return this._data.length;
   }
 
-  public getAttributedFeatures(): AttributedFeature[] {
-    return this._data;
+  public getAttributesTable(): DataTable {
+    return DataTable.createFromRecords(this._data.map(x => x.properties));
   }
 
   public static strToWKT (str: string): WKTFeature|undefined {

@@ -1,3 +1,4 @@
+import { DataTable } from '../../table';
 import { AppFeatureLayerBase, type AttributedFeature } from './base';
 import type { Feature, FeatureCollection, Geometry } from 'geojson';
 
@@ -51,10 +52,10 @@ export class AppGeoJSONLayer extends AppFeatureLayerBase<AppGeoJSONLayerData> {
     return this._data.type === 'FeatureCollection' ? this._data.features.length : 1;
   }
 
-  public getAttributedFeatures(): AttributedFeature[] {
-    if (this._data.type === 'Feature') return [this._data];
-    if (this._data.type === 'FeatureCollection') return this._data.features;
-    return [];
+  public getAttributesTable(): DataTable {
+    if (this._data.type === 'Feature') return DataTable.createFromRecords([this._data.properties]);
+    if (this._data.type === 'FeatureCollection') return DataTable.createFromRecords(this._data.features.map(x => x.properties));
+    return DataTable.createFromRecords([]);
   }
 
   public static rawIsValid(raw: string): boolean {

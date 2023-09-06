@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getMapLayersContext } from '../../lib/contexts';
-  import type { AppMapLayer } from '../../lib/layers/layer';
+  import type { AppMapLayer } from '../../lib/layers/map-layer';
 
   export let layer: AppMapLayer;
   export let dragFocused: boolean = false;

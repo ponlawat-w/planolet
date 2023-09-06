@@ -1,4 +1,4 @@
-import { AppMapLayer } from './layer';
+import { AppMapLayer } from './map-layer';
 import { TileLayer } from 'leaflet';
 import { v4 } from 'uuid';
 

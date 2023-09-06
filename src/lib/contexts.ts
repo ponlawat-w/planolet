@@ -1,6 +1,6 @@
 import { getContext } from 'svelte';
 import type { AppLayers } from './layers/layers';
-import type { AppMapLayer } from './layers/layer';
+import type { AppMapLayer } from './layers/map-layer';
 import type { Map } from 'leaflet';
 import type { Writable } from 'svelte/store';
 

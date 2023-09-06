@@ -7,7 +7,7 @@
   import { modalStore, type ModalSettings, toastStore } from '@skeletonlabs/skeleton';
   import Droppable from './reorder-dnd/Droppable.svelte';
   import Layer from './LayerListItem.svelte';
-  import type { AppMapLayer } from '../../lib/layers/layer';
+  import type { AppMapLayer } from '../../lib/layers/map-layer';
 
   const { layersContext, selectedLayerContext } = getMapLayersContext();
 

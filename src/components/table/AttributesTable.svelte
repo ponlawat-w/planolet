@@ -11,11 +11,8 @@
       tableSource = undefined;
       return;
     }
-    const attributesTable = $selectedLayerContext.getAttributeTables();
-    tableSource = {
-      head: attributesTable.headers,
-      body: tableMapperValues(attributesTable.body, attributesTable.headers)
-    };
+    const attributesTable = $selectedLayerContext.getAttributesTable();
+    tableSource = attributesTable.headers.length ? attributesTable.toTableSource() : undefined;
   };
 
   $: if ($selectedLayerContext) {
@@ -27,6 +24,10 @@
   <div class="max-h-48 overflow-y-auto" class:regionBody={false}>
     <Table source={tableSource} interactive={true}
       regionCell="!p-1" regionHeadCell="!p-2" />
+  </div>
+{:else}
+  <div class="text-center">
+    This layer does not have attributes table.
   </div>
 {/if}
 
