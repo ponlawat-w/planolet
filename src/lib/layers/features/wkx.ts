@@ -1,4 +1,4 @@
-import { AppFeatureLayerBase, type AttributedFeature } from './base';
+import { AppFeatureLayerBase } from './base';
 import { Buffer } from 'buffer';
 import { Geometry } from '../../wkx';
 import type { FeatureCollection, Geometry as GeoJSONGeometry } from 'geojson';

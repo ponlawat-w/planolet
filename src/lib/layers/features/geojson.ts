@@ -1,5 +1,5 @@
 import { DataTable } from '../../table';
-import { AppFeatureLayerBase, type AttributedFeature } from './base';
+import { AppFeatureLayerBase } from './base';
 import type { Feature, FeatureCollection, Geometry } from 'geojson';
 
 export type AppGeoJSONLayerData = FeatureCollection|Feature|Geometry;

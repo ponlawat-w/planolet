@@ -1,7 +1,10 @@
-import type { Feature, FeatureCollection, Geometry } from 'geojson';
-import type { DataTable } from '../../table';
-import { AppFeatureLayerBase } from './base';
 import { AppFeatureLayer } from './feature';
+import { AppFeatureLayerBase } from './base';
+import { Buffer } from 'buffer';
+import { FeatureDataTable } from './table';
+import { Geometry as WKXGeometry } from '../../wkx';
+import type { DataTable } from '../../table';
+import type { Feature, FeatureCollection, Geometry } from 'geojson';
 
 export type CSVGeospaitaliseOptions = {
   delimiter: string,
@@ -30,7 +33,7 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
     super(name, { table, options });
   }
 
-  public getFeature(row: any): Geometry|undefined {
+  public getGeometry(row: any): Geometry|undefined {
     const geomOptions = this._data.options.geometry;
     if (geomOptions.geometryColumn) {
       const subCollection = AppFeatureLayer.createFromRaw('', row[geomOptions.geometryColumn]).getFeatureCollection();
@@ -46,7 +49,7 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
   public getFeatureCollection(): FeatureCollection {
     const features: Feature[] = [];
     for (const row of this._data.table.rows) {
-      const geometry = this.getFeature(this._data.table.objectifyRow(row));
+      const geometry = this.getGeometry(this._data.table.objectifyRow(row));
       if (geometry) features.push({ type: 'Feature', properties: {}, geometry });
     }
     return { type: 'FeatureCollection', features };
@@ -70,5 +73,14 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
   
   public getAttributesTable(): DataTable {
     return this._data.table;
+  }
+
+  public getFeaturesTable(): FeatureDataTable {
+    const geometries: Buffer[] = [];
+    for (const row of this._data.table.rows) {
+      const geometry = this.getGeometry(this._data.table.objectifyRow(row));
+      geometries.push(geometry ? WKXGeometry.parseGeoJSON(geometry).toWkb() : Buffer.from([]));
+    }
+    return new FeatureDataTable(this._data.table.headers, this._data.table.rows, geometries);
   }
 }

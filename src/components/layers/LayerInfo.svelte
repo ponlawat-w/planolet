@@ -5,6 +5,8 @@
   import { getMapLayersContext } from '../../lib/contexts';
   import { SlideToggle } from '@skeletonlabs/skeleton';
   import type { FeatureGroup } from 'leaflet';
+  import type { LayerWriterBase } from '../../lib/layers/writer/base';
+  import { WRITERS_COLLECTION } from '../../lib/layers/writer/collection';
 
   const { mapContext, layersContext, selectedLayerContext } = getMapLayersContext();
 
@@ -21,9 +23,17 @@
     editingName = false;
   };
 
+  let writers: LayerWriterBase[] = [];
+  let selectedWriter: LayerWriterBase = undefined;
+  $: if (selectedWriter) {
+    selectedWriter.download($selectedLayerContext);
+    selectedWriter = undefined;
+  }
+
   let visible: boolean;
   $: if ($selectedLayerContext && $layersContext) {
     visible = $selectedLayerContext.visible;
+    writers = WRITERS_COLLECTION.filter(x => x.layerWritable($selectedLayerContext));
   }
 
   let featuresCount: number;
@@ -93,6 +103,15 @@
         {featuresCount} feature{featuresCount === 1 ? '' : 's'} in this layer.
       </p>
       <hr class="mb-2">
+      {/if}
+    {#if writers.length}
+      <select class="select" bind:value={selectedWriter}>
+        <option value={undefined}> Download Layer </option>
+        {#each writers as writer}
+        <option on:click={() => { console.log('e'); }} value={writer}>as {writer._name}</option>
+        {/each}
+      </select>
+      <hr class="my-2">
     {/if}
     <button class="btn btn-sm w-full variant-filled-error" on:click={() => $layersContext.askToRemoveLayer($selectedLayerContext, selectedLayerContext)}>
       <i class="fa fa-trash mr-2"></i>

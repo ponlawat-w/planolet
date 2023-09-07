@@ -1,8 +1,10 @@
 import { AppObjectLayer } from '../object';
 import { FeatureRenderer } from '../feature-renderer';
-import type { FeatureCollection } from 'geojson';
-import type { FeatureGroup } from 'leaflet';
+import { Geometry as WKXGeometry } from '../../wkx';
 import type { DataTable } from '../../table';
+import type { FeatureCollection } from 'geojson';
+import { FeatureDataTable } from './table';
+import type { FeatureGroup } from 'leaflet';
 
 export type AttributedFeature = Record<string, any> & { properties: Record<string, any> };
 
@@ -29,4 +31,10 @@ export abstract class AppFeatureLayerBase<T = any> extends AppObjectLayer {
   public abstract getGeometryTypeText(): string;
   public abstract getFeaturesCount(): number;
   public abstract getAttributesTable(): DataTable;
+  
+  public getFeaturesTable(): FeatureDataTable {
+    const table = this.getAttributesTable();
+    const geometries = this.getFeatureCollection().features.map(x => WKXGeometry.parseGeoJSON(x.geometry).toWkb());
+    return FeatureDataTable.fromDataTable(table, geometries);
+  }
 }
