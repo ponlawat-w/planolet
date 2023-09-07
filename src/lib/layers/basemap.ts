@@ -6,10 +6,10 @@ export class AppBasemapLayer extends AppMapLayer {
   public pane: string = v4();
   public url: string;
 
-  public constructor(name: string, url: string) {
+  public constructor(name: string, url: string, attribution?: string) {
     super({ name });
     this.url = url;
-    this.leaflet = new TileLayer(this.url);
+    this.leaflet = new TileLayer(this.url, { attribution });
   }
 
   public static urlValid(url: string): boolean {

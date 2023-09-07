@@ -57,7 +57,7 @@
       type = AppFeatureLayer.rawToType(text);
       valid = type !== AppFeatureLayerDataType.Unknown ? true: false;
     } else if (mode === InputMode.Text) {
-      type = AppFeatureLayer.rawToType(text);
+      type = AppFeatureLayer.rawToType(text, 2);
       valid = type !== AppFeatureLayerDataType.Unknown ? true: false;
     }
   } else {
@@ -169,12 +169,12 @@
         <div>
           <strong>Input Type:</strong>
           {#if type === AppFeatureLayerDataType.Unknown}
-            <span class="text-error-500">
+            <span class="text-error-500 dark:text-error-300">
               <i class="fa fa-times-circle"></i>
               Unknown
             </span>
           {:else}
-            <span class="text-success-700">
+            <span class="text-success-700 dark:text-success-500">
               <i class="fa fa-check-circle"></i>
               {#if type === AppFeatureLayerDataType.GeoJSON}
               GeoJSON

@@ -71,7 +71,7 @@ export class DataTable {
     return new DataTable(headers, rows);
   }
 
-  public static validateCsvContent(csvContent: string, delimiter?: string): boolean {
+  public static validateCsvContent(csvContent: string, delimiter?: string, minColumns: number = 1): boolean {
     try {
       if (!csvContent) return false;
       let first: boolean = true;
@@ -86,7 +86,7 @@ export class DataTable {
           return false;
         }
       }
-      return !first;
+      return !first && columnsCount >= minColumns;
     } catch { return false; }
   }
 };

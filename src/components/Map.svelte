@@ -14,7 +14,11 @@
 
     $layersContext.setMap(map);
 
-    const defaultLayer = new AppBasemapLayer('OSM Basemap', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png');
+    const defaultLayer = new AppBasemapLayer(
+      'OSM Basemap',
+      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      '<a href="https://www.openstreetmap.org" target="_blank">© OpenStreetMap</a>'
+    );
     const featureLayer = new AppGeoJSONLayer({ name: 'Test', raw: '{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"dataText":"abc","dataNumber":1,"dataBoolean":false},"geometry":{"coordinates":[98.98140303674813,18.792541512343803],"type":"Point"}},{"type":"Feature","properties":{"dataNumber":5,"dataBoolean":true},"geometry":{"coordinates":[98.98944028711247,18.78414681819163],"type":"Point"}}]}' });
 
     mapContext.set(map);

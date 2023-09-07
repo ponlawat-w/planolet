@@ -1,8 +1,8 @@
-import { DataTable, type CSVGeospaitaliseOptions } from '../../table';
+import { AppCSVLayer, type CSVGeospaitaliseOptions } from './csv';
 import { AppGeoJSONLayer } from './geojson';
 import { AppWKXLayer } from './wkx';
+import { DataTable } from '../../table';
 import type { AppFeatureLayerBase } from './base';
-import { AppCSVLayer } from './csv';
 
 export enum AppFeatureLayerDataType {
   Unknown = 0,
@@ -14,10 +14,10 @@ export enum AppFeatureLayerDataType {
 export class AppFeatureLayer {
   private constructor() {}
 
-  public static rawToType(raw: string): AppFeatureLayerDataType {
+  public static rawToType(raw: string, minCsvColumnsCount: number = 1): AppFeatureLayerDataType {
     if (AppGeoJSONLayer.rawIsValid(raw)) return AppFeatureLayerDataType.GeoJSON;
     if (AppWKXLayer.rawIsValid(raw)) return AppFeatureLayerDataType.WKX;
-    if (DataTable.validateCsvContent(raw)) return AppFeatureLayerDataType.CSV;
+    if (DataTable.validateCsvContent(raw, ',', minCsvColumnsCount)) return AppFeatureLayerDataType.CSV;
     return AppFeatureLayerDataType.Unknown;
   }
 

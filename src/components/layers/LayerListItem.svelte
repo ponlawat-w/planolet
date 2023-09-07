@@ -43,7 +43,7 @@
       </a>
     </div>
     <div class="flex-none">
-      <button type="button" class="btn btn-sm text-error-500 pt-2 pr-2" class:text-surface-500={dragFocused}
+      <button type="button" class="btn btn-sm text-error-500 dark:text-error-400 pt-2 pr-2" class:text-surface-500={dragFocused}
         on:click={() => $layersContext.askToRemoveLayer(layer, selectedLayerContext)}>
         <i class="fa fa-times"></i>
       </button>

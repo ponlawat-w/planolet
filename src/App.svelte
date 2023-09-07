@@ -9,6 +9,7 @@
   import { AppFeatureLayerBase } from './lib/layers/features/base';
   import { AppLayers } from './lib/layers/layers';
   import { CONTEXT_LAYERS, CONTEXT_MAP, type ContextSelectedLayer, type ContextLayers, type ContextMap, CONTEXT_SELECTED_LAYER } from './lib/contexts';
+  import { isDarkMode } from './lib/theme';
   import { writable } from 'svelte/store';
   import AttributesTable from './components/table/AttributesTable.svelte';
   import LayerInfo from './components/layers/LayerInfo.svelte';
@@ -20,6 +21,12 @@
   const mapContext = setContext<ContextMap>(CONTEXT_MAP, writable(undefined));
   const layersContext = setContext<ContextLayers>(CONTEXT_LAYERS, layers.context);
   const selectedLayerContext = setContext<ContextSelectedLayer>(CONTEXT_SELECTED_LAYER, writable(undefined));
+  
+  $: if ($isDarkMode) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
 
   let shouldRerenderLayers: boolean = false;
   layersContext.subscribe(() => {
