@@ -5,6 +5,7 @@
   import { getExceptionErrorToast } from '../../lib/toasts';
   import { readFileAsText } from '../../lib/file';
   import CsvOptions from './CsvOptions.svelte';
+  import FormModal from '../../lib/modals/FormModal.svelte';
   import type { AppObjectLayer } from '../../lib/layers/object';
   import type { ModalParent } from '../../types';
 
@@ -110,89 +111,75 @@
   };
 </script>
 
-<div class="card w-modal">
-  <form on:submit|preventDefault={submit}>
-    <header class="card-header">
-      <i class="fa-solid fa-plus-circle"></i>
-      Add a new feature layer
-      <button type="button" class="btn btn-sm float-right" on:click={modalStore.close}>
-        <i class="fa fa-times"></i>
-      </button>
-    </header>
-    <section class="p-4">
-      {#if !parent}<slot />{/if}
-      <div class="input-group mb-2 grid-cols-[auto_1fr]">
-        <div class="input-group-shim">Layer Name</div>
-        <input type="text" class="input" bind:value={name}>
-      </div>
-      <div class="mb-2">
-        <span class="inline mr-2">
-          Input Mode:
+<FormModal on:submit={submit} disabled={!valid || loading} submitText={loading ? 'Loading': 'Add'} title="Add a new feature layer">
+  {#if !parent}<slot />{/if}
+  <div class="input-group mb-2 grid-cols-[auto_1fr]">
+    <div class="input-group-shim">Layer Name</div>
+    <input type="text" class="input" bind:value={name}>
+  </div>
+  <div class="mb-2">
+    <span class="inline mr-2">
+      Input Mode:
+    </span>
+    <label class="inline">
+      <input type="radio" bind:group={mode} value={InputMode.Text} disabled={loading}>
+      Text
+    </label>
+    <label class="inline mr-2">
+      <input type="radio" bind:group={mode} value={InputMode.File} disabled={loading}>
+      File
+    </label>
+    <label class="inline mr-2">
+      <input type="radio" bind:group={mode} value={InputMode.URL} disabled={loading}>
+      URL
+    </label>
+  </div>
+  {#if mode === InputMode.URL}
+    <div class="input-group grid-cols-[auto_1fr]">
+      <div class="input-group-shim">URL</div>
+      <input type="text" class="input font-mono" placeholder="https://" bind:value={url} disabled={loading}>
+    </div>
+  {:else if mode === InputMode.File}
+    {#if files && files.length}
+      <span class="badge variant-filled-primary mb-2">
+        {files[0].name}
+        <button type="button" class="btn py-0 pr-0 pl-2" on:click={() => { files = undefined; }} disabled={loading}>
+          <i class="fa fa-times"></i>
+        </button>
+      </span>
+    {:else}
+      <FileDropzone name="files" multiple="false" on:change={filesChanged} bind:files={files} disabled={loading} />
+    {/if}
+  {:else if mode === InputMode.Text}
+    <textarea class="input w-100 h-72 font-mono" bind:value={text} disabled={loading}></textarea>
+    <div class="text-xs text-tertiary-900">
+      <i class="fa fa-info-circle text-primary-500"></i>
+      Supports: GeoJSON / Well-Known Text (WKT) / Well-Known Bytes (WKB) in Hex or Base64 string
+    </div>
+  {/if}
+  {#if (mode === InputMode.File && files && files.length) || mode === InputMode.Text}
+    <div>
+      <strong>Input Type:</strong>
+      {#if type === AppFeatureLayerDataType.Unknown}
+        <span class="text-error-500 dark:text-error-300">
+          <i class="fa fa-times-circle"></i>
+          Unknown
         </span>
-        <label class="inline">
-          <input type="radio" bind:group={mode} value={InputMode.Text} disabled={loading}>
-          Text
-        </label>
-        <label class="inline mr-2">
-          <input type="radio" bind:group={mode} value={InputMode.File} disabled={loading}>
-          File
-        </label>
-        <label class="inline mr-2">
-          <input type="radio" bind:group={mode} value={InputMode.URL} disabled={loading}>
-          URL
-        </label>
-      </div>
-      {#if mode === InputMode.URL}
-        <div class="input-group grid-cols-[auto_1fr]">
-          <div class="input-group-shim">URL</div>
-          <input type="text" class="input font-mono" placeholder="https://" bind:value={url} disabled={loading}>
-        </div>
-      {:else if mode === InputMode.File}
-        {#if files && files.length}
-          <span class="badge variant-filled-primary mb-2">
-            {files[0].name}
-            <button type="button" class="btn py-0 pr-0 pl-2" on:click={() => { files = undefined; }} disabled={loading}>
-              <i class="fa fa-times"></i>
-            </button>
-          </span>
-        {:else}
-          <FileDropzone name="files" multiple="false" on:change={filesChanged} bind:files={files} disabled={loading} />
-        {/if}
-      {:else if mode === InputMode.Text}
-        <textarea class="input w-100 h-72 font-mono" bind:value={text} disabled={loading}></textarea>
-        <div class="text-xs text-tertiary-900">
-          <i class="fa fa-info-circle text-primary-500"></i>
-          Supports: GeoJSON / Well-Known Text (WKT) / Well-Known Bytes (WKB) in Hex or Base64 string
-        </div>
-      {/if}
-      {#if (mode === InputMode.File && files && files.length) || mode === InputMode.Text}
-        <div>
-          <strong>Input Type:</strong>
-          {#if type === AppFeatureLayerDataType.Unknown}
-            <span class="text-error-500 dark:text-error-300">
-              <i class="fa fa-times-circle"></i>
-              Unknown
-            </span>
-          {:else}
-            <span class="text-success-700 dark:text-success-500">
-              <i class="fa fa-check-circle"></i>
-              {#if type === AppFeatureLayerDataType.GeoJSON}
-              GeoJSON
-              {:else if type === AppFeatureLayerDataType.WKX}
-              Well-Known Geometry (WKT or WKB)
-              {:else if type === AppFeatureLayerDataType.CSV}
-              Comma-Separated Values (CSV)
-              {/if}
-            </span>
+      {:else}
+        <span class="text-success-700 dark:text-success-500">
+          <i class="fa fa-check-circle"></i>
+          {#if type === AppFeatureLayerDataType.GeoJSON}
+          GeoJSON
+          {:else if type === AppFeatureLayerDataType.WKX}
+          Well-Known Geometry (WKT or WKB)
+          {:else if type === AppFeatureLayerDataType.CSV}
+          Comma-Separated Values (CSV)
           {/if}
-        </div>
+        </span>
       {/if}
-      {#if type === AppFeatureLayerDataType.CSV}
-        <CsvOptions content={text} bind:options={csvOptions} />
-      {/if}
-    </section>
-    <footer class="card-footer text-right">
-      <button type="submit" class="btn variant-filled-success" disabled={!valid || loading}>{loading ? 'Loading': 'Add'}</button>
-    </footer>
-  </form>
-</div>
+    </div>
+  {/if}
+  {#if type === AppFeatureLayerDataType.CSV}
+    <CsvOptions content={text} bind:options={csvOptions} />
+  {/if}
+</FormModal>

@@ -1,11 +1,12 @@
 import { DataTable, type TableColumn, type TableRow } from '../../table';
+import type { Buffer } from 'buffer';
 
 export class FeatureDataTable extends DataTable {
-  protected _geometries: Uint8Array[];
+  protected _geometries: Buffer[];
 
-  public get geometries(): Uint8Array[] { return this._geometries; };
+  public get geometries(): Buffer[] { return this._geometries; };
 
-  public constructor(headers: TableColumn[], rows: TableRow[], geometries: Uint8Array[]) {
+  public constructor(headers: TableColumn[], rows: TableRow[], geometries: Buffer[]) {
     if (rows.length !== geometries.length) {
       throw new Error('Data records lenght must match geometries length.');
     }
@@ -13,7 +14,7 @@ export class FeatureDataTable extends DataTable {
     this._geometries = geometries;
   }
 
-  public static fromDataTable(dataTable: DataTable, geometries: Uint8Array[]): FeatureDataTable {
+  public static fromDataTable(dataTable: DataTable, geometries: Buffer[]): FeatureDataTable {
     return new FeatureDataTable(dataTable.headers, dataTable.rows, geometries);
   }
 }

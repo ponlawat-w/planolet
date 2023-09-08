@@ -8,8 +8,10 @@
   import { AppBar, AppShell, Modal, Toast } from '@skeletonlabs/skeleton';
   import { AppFeatureLayerBase } from './lib/layers/features/base';
   import { AppLayers } from './lib/layers/layers';
+  import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
   import { CONTEXT_LAYERS, CONTEXT_MAP, type ContextSelectedLayer, type ContextLayers, type ContextMap, CONTEXT_SELECTED_LAYER } from './lib/contexts';
   import { isDarkMode } from './lib/theme';
+  import { storePopup } from '@skeletonlabs/skeleton';
   import { writable } from 'svelte/store';
   import AttributesTable from './components/table/AttributesTable.svelte';
   import LayerInfo from './components/layers/LayerInfo.svelte';
@@ -66,6 +68,8 @@
       $layersContext.reorderLeafletDisplay();
     }
   });
+
+  storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
 </script>
 
 <Modal zIndex="z-[1001]" /><Toast zIndex="z-[1002]" />

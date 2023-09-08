@@ -5,8 +5,19 @@ import { AppGeoJSONLayer } from '../features/geojson';
 import type { AppLayer } from '../layer';
 import { LayerWriterBase } from './base';
 import { Buffer } from 'buffer';
+import type { ModalComponent } from '@skeletonlabs/skeleton';
+import GeoJsonOptionsModal from './GeoJSONOptionsModal.svelte';
 
-export class GeoJSONWriter extends LayerWriterBase {
+export type GeoJSONWriterOptions = {
+  pretty: boolean,
+  space?: number
+};
+
+export class GeoJSONWriter extends LayerWriterBase<GeoJSONWriterOptions> {
+  protected _optionsModalComponent: ModalComponent = {
+    ref: GeoJsonOptionsModal
+  };
+
   public constructor() {
     super(
       'GeoJSON',
@@ -19,8 +30,14 @@ export class GeoJSONWriter extends LayerWriterBase {
     return layer instanceof AppFeatureLayerBase;
   }
 
-  public getLayerContent(layer: AppLayer): Uint8Array {
-    return Buffer.from(JSON.stringify(GeoJSONWriter.getFeatureCollection(layer)));
+  public getLayerContent(layer: AppLayer, options: GeoJSONWriterOptions): Uint8Array {
+    return Buffer.from(
+      JSON.stringify(
+        GeoJSONWriter.getFeatureCollection(layer),
+        undefined,
+        options && options.pretty && options.space ? (options.space ?? 2) : undefined
+      )
+    );
   }
   
   public static getFeatureCollection(layer: AppLayer): FeatureCollection {

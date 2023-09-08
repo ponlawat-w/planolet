@@ -3,7 +3,7 @@
   import { AppFeatureLayerBase } from '../../lib/layers/features/base';
   import { AppObjectLayer } from '../../lib/layers/object';
   import { getMapLayersContext } from '../../lib/contexts';
-  import { SlideToggle } from '@skeletonlabs/skeleton';
+  import { SlideToggle, popup } from '@skeletonlabs/skeleton';
   import type { FeatureGroup } from 'leaflet';
   import type { LayerWriterBase } from '../../lib/layers/writer/base';
   import { WRITERS_COLLECTION } from '../../lib/layers/writer/collection';
@@ -24,11 +24,6 @@
   };
 
   let writers: LayerWriterBase[] = [];
-  let selectedWriter: LayerWriterBase = undefined;
-  $: if (selectedWriter) {
-    selectedWriter.download($selectedLayerContext);
-    selectedWriter = undefined;
-  }
 
   let visible: boolean;
   $: if ($selectedLayerContext && $layersContext) {
@@ -105,12 +100,17 @@
       <hr class="mb-2">
       {/if}
     {#if writers.length}
-      <select class="select" bind:value={selectedWriter}>
-        <option value={undefined}> Download Layer </option>
+      <button class="btn btn-sm w-full variant-filled-primary" use:popup={{target: 'downloadPopup', event: 'click'}}>
+        <i class="fa fa-download mr-2"></i>
+        Download
+      </button>
+      <div class="btn-group-vertical w-auto variant-filled shadow-xl mr-2" data-popup="downloadPopup">
         {#each writers as writer}
-        <option on:click={() => { console.log('e'); }} value={writer}>as {writer._name}</option>
+        <button type="button" class="btn w-full" on:click={() => writer.trigger($selectedLayerContext)}>
+          {writer.name}
+        </button>
         {/each}
-      </select>
+      </div>
       <hr class="my-2">
     {/if}
     <button class="btn btn-sm w-full variant-filled-error" on:click={() => $layersContext.askToRemoveLayer($selectedLayerContext, selectedLayerContext)}>

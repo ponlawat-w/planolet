@@ -1,88 +1,73 @@
 import { AppFeatureLayerBase } from '../features/base';
-import type { AppLayer } from '../layer';
-import { AppTableLayer } from '../table';
+import { Buffer } from 'buffer';
+import { Geometry as WKXGeometry } from '../../wkx';
 import { LayerWriterBase } from './base';
 import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync';
-import { Geometry as WKXGeometry } from '../../wkx';
-import { Buffer } from 'buffer';
+import CsvOptionsModal from './CSVOptionsModal.svelte';
+import type { AppLayer } from '../layer';
+import type { CSVGeneralOptions, CSVOptions } from '../../csv/options';
+import type { ModalComponent } from '@skeletonlabs/skeleton';
 
-export abstract class CSVWriterBase extends LayerWriterBase {
-  public constructor(name: string) {
+export abstract class CSVWriter<T extends CSVGeneralOptions> extends LayerWriterBase<T> {
+  protected _optionsModalComponent: ModalComponent = { ref: CsvOptionsModal };
+
+  public constructor() {
     super(
-      name,
+      'CSV',
       'text/csv',
       'csv'
     );
   }
 
-  public abstract getRows(layer: AppLayer): any[][];
+  public abstract getRows(layer: AppLayer, options: T): any[][];
 
-  public getLayerContent(layer: AppLayer): Uint8Array {
-    return Buffer.from(csvStringify(this.getRows(layer), { header: false, delimiter: ',' }));
+  public getLayerContent(layer: AppLayer, options: T): Uint8Array {
+    return Buffer.from(
+      csvStringify(
+        this.getRows(layer, options), { header: false, delimiter: options.delimiter }
+      )
+    );
   }
 };
 
-export class NonSpatialCSVWriter extends CSVWriterBase {
-  public constructor() { super('CSV'); }
-
-  public layerWritable(layer: AppLayer): boolean {
-    return layer instanceof AppTableLayer;
-  }
-
-  public getRows(layer: AppLayer): any[][] {
-    if (!(layer instanceof AppTableLayer)) throw new Error('Unsupported layer type');
-    return [
-      layer.data.headers.map(x => x.name),
-      ...layer.data.rows
-    ];
-  }
-};
-
-export abstract class SpatialCSVWriter extends CSVWriterBase {
+export class SpatialCSVWriter extends CSVWriter<CSVOptions> {
   public layerWritable(layer: AppLayer): boolean {
     return layer instanceof AppFeatureLayerBase;
   }
 
-  public abstract toGeometryValue(data: Buffer): string;
-
-  public getRows(layer: AppLayer): any[][] {
+  public getRows(layer: AppLayer, options: CSVOptions): any[][] {
     if (!(layer instanceof AppFeatureLayerBase)) throw new Error('Unsupported layer type');
+    const geometryFn = SpatialCSVWriter.getGeometryConversionFunction(options);
+    if (!geometryFn) throw new Error('Invalid options');
     const table = layer.getFeaturesTable();
     return [
       [...table.headers.map(x => x.name), 'SHAPE'],
-      ...table.rows.map((row, i) => [...row, this.toGeometryValue(Buffer.from(table.geometries[i]))])
+      ...table.rows.map((row, i) => [...row, geometryFn(table.geometries[i])])
     ];
   }
-};
 
-export class CSVGeoJSONWriter extends SpatialCSVWriter {
-  public constructor() { super('CSV - shape as GeoJSON'); }
-
-  public toGeometryValue(data: Buffer): string {
-    return JSON.stringify(WKXGeometry.parse(data).toGeoJSON());
+  protected static geometryToGeoJSON(wkbGeometry: Buffer): string {
+    return JSON.stringify(WKXGeometry.parse(wkbGeometry).toGeoJSON());
   }
-};
 
-export class CSVWKTWriter extends SpatialCSVWriter {
-  public constructor() { super('CSV - shape as WKT'); }
-
-  public toGeometryValue(data: Buffer): string {
-    return WKXGeometry.parse(data).toWkt();
+  protected static geometryToWKT(wkbGeometry: Buffer): string {
+    return WKXGeometry.parse(wkbGeometry).toWkt();
   }
-};
 
-export class CSVWKBHexWriter extends SpatialCSVWriter {
-  public constructor() { super('CSV - shape as WKB (hex)'); }
-
-  public toGeometryValue(data: Buffer): string {
-    return data.toString('hex');
+  protected static geometryToWKBHex(wkbGeometry: Buffer): string {
+    return wkbGeometry.toString('hex');
   }
-};
 
-export class CSVWKBBase64Writer extends SpatialCSVWriter {
-  public constructor() { super('CSV - shape as WKB (base64)'); }
+  protected static geometryToWKBBase64(wkbGeometry: Buffer): string {
+    return wkbGeometry.toString('base64');
+  }
 
-  public toGeometryValue(data: Buffer): string {
-    return data.toString('base64');
+  protected static getGeometryConversionFunction(options: CSVOptions): undefined|((wkb: Buffer) => string) {
+    if (!options || !options.geometry) return undefined;
+    if (options.geometry.mode === 'geojson') return SpatialCSVWriter.geometryToGeoJSON;
+    if (options.geometry.mode === 'wkt') return SpatialCSVWriter.geometryToWKT;
+    if (options.geometry.mode === 'wkb' && options.geometry.encoding === 'hex') return SpatialCSVWriter.geometryToWKBHex;
+    if (options.geometry.mode === 'wkb' && options.geometry.encoding === 'base64') return SpatialCSVWriter.geometryToWKBBase64;
+    return undefined;
   }
 };
