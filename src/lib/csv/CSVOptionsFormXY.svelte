@@ -1,19 +1,25 @@
 <script lang="ts">
-  export let xColumn: string = 'longitude';
-  export let yColumn: string = 'latitude';
+  import CSVColumnNameOption from './CSVColumnNameOption.svelte';
+
+  export let xColumn: string;
+  export let yColumn: string;
+  export let columns: string[]|undefined = undefined;
+
+  xColumn = xColumn ?? 'longitude';
+  yColumn = yColumn ?? 'latitude';
 </script>
 
 <div class="grid grid-cols-12">
   <div class="col-span-6">
     <div class="input-group">
       <div class="input-group-shim">X Column Name <small>(Longitude)</small></div>
-      <input type="text" class="input" bind:value={xColumn}>
+      <CSVColumnNameOption bind:value={xColumn} columns={columns} />
     </div>
   </div>
   <div class="col-span-6">
     <div class="input-group">
       <div class="input-group-shim">Y Column Name <small>(Latitude)</small></div>
-      <input type="text" class="input" bind:value={yColumn}>
+      <CSVColumnNameOption bind:value={yColumn} columns={columns} />
     </div>
   </div>
 </div>

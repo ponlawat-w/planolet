@@ -43,6 +43,7 @@ export abstract class LayerWriterBase<T = undefined> {
   protected downloadUI(layer: AppLayer, options?: T) {
     try {
       this.download(layer, options);
+      modalStore.close();
     } catch (ex) {
       toastStore.trigger(getExceptionErrorToast('Unable to download', ex));
     }

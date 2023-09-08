@@ -1,12 +1,14 @@
 export type CSVGeneralOptions = {
-  delimiter: string
+  delimiter: string,
+  minColumn?: number
 };
 
 export type CSVGeometryModeNone = 'none';
 export type CSVGeometryModeXY = 'xy';
 export type CSVGeometryModeText = 'geojson' | 'wkt';
 export type CSVGeometryModeBinary = 'wkb';
-export type CSVSingleGeometryModes = CSVGeometryModeText | CSVGeometryModeBinary;
+export type CSVGeometryModeAuto = 'auto';
+export type CSVSingleGeometryModes = CSVGeometryModeText | CSVGeometryModeBinary | CSVGeometryModeAuto;
 export type CSVGeometryMode = CSVGeometryModeNone | CSVGeometryModeXY | CSVSingleGeometryModes;
 
 export type CSVGeometryBinaryEncoding = 'hex' | 'base64';
@@ -26,13 +28,18 @@ export type CSVGeometryTextOptions = {
   columnName: string
 };
 
-export type CSVGeomtryBinaryOptions = {
+export type CSVGeometryBinaryOptions = {
   mode: CSVGeometryModeBinary,
   encoding: CSVGeometryBinaryEncoding,
   columnName: string
 };
 
-export type CSVGeometryOptions = CSVNoneGeometry | CSVGeometryXYOptions | CSVGeometryTextOptions | CSVGeomtryBinaryOptions;
+export type CSVGeometryAutoOptions = {
+  mode: CSVGeometryModeAuto,
+  columnName: string
+};
+
+export type CSVGeometryOptions = CSVNoneGeometry | CSVGeometryXYOptions | CSVGeometryTextOptions | CSVGeometryBinaryOptions | CSVGeometryAutoOptions;
 
 export type CSVOptions<T extends CSVGeometryOptions = CSVGeometryOptions> = CSVGeneralOptions & {
   geometry: T

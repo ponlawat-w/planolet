@@ -4,7 +4,7 @@
   import CsvOptionsForm from '../../csv/CSVOptionsForm.svelte';
   import FormModal from '../../modals/FormModal.svelte';
   import { AppFeatureLayerBase } from '../features/base';
-  import type { CSVOptions } from '../../csv/options';
+  import { getDefaultCSVOptions, type CSVOptions } from '../../csv/options';
 
   export let parent: any;
 
@@ -12,7 +12,7 @@
   let layer: AppFeatureLayerBase|undefined;
   $: layer = $selectedLayerContext instanceof AppFeatureLayerBase ? $selectedLayerContext : undefined;
   
-  let options: CSVOptions;
+  let options: CSVOptions = getDefaultCSVOptions();
 
   const submit = () => {
     if ($modalStore[0] && $modalStore[0].response) {

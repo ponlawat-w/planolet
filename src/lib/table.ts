@@ -1,5 +1,6 @@
 import { parse as parseCsv } from 'csv/browser/esm/sync';
 import type { TableSource } from '@skeletonlabs/skeleton';
+import type { CSVGeneralOptions } from './csv/options';
 
 export type TableColumnType = 'raw';
 
@@ -56,11 +57,11 @@ export class DataTable {
     return new DataTable(headers, rows);
   }
 
-  public static createFromCsv(csvContent: string, delimiter?: string): DataTable {
+  public static createFromCsv(csvContent: string, options: CSVGeneralOptions): DataTable {
     let first: boolean = true;
-    let headers: TableColumn[];
+    let headers: TableColumn[] = [];
     let rows: TableRow[] = [];
-    for (let row of parseCsv(csvContent, { columns: false, delimiter }) as any[][]) {
+    for (let row of parseCsv(csvContent, { columns: false, delimiter: options.delimiter }) as any[][]) {
       if (first) {
         headers = row.map((x: string) => ({ name: x, type: 'raw' }));
         first = false;
@@ -71,12 +72,12 @@ export class DataTable {
     return new DataTable(headers, rows);
   }
 
-  public static validateCsvContent(csvContent: string, delimiter?: string, minColumns: number = 1): boolean {
+  public static validateCsvContent(csvContent: string, options: CSVGeneralOptions, minColumns: number = 1): boolean {
     try {
       if (!csvContent) return false;
       let first: boolean = true;
       let columnsCount: number = undefined;
-      for (let row of parseCsv(csvContent, { columns: false, delimiter }) as any[][]) {
+      for (let row of parseCsv(csvContent, { columns: false, delimiter: options.delimiter }) as any[][]) {
         if (first) {
           columnsCount = row.length;
           first = false;

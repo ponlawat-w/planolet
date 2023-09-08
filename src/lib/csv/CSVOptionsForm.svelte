@@ -3,22 +3,22 @@
   import { SpatialCSVWriter } from '../layers/writer/csv';
   import CsvOptionsFormGeometry from './CSVOptionsFormGeometry.svelte';
   import CsvOptionsFormXY from './CSVOptionsFormXY.svelte';
-  import {
-    getDefaultCSVOptions,
-    type CSVOptions,
-    type CSVGeometryXYOptions,
-    type CSVGeomtryBinaryOptions,
-    type CSVGeneralOptions,
-    type CSVGeometryMode,
-    type CSVGeometryBinaryEncoding
+  import type {
+    CSVOptions,
+    CSVGeometryXYOptions,
+    CSVGeometryBinaryOptions,
+    CSVGeneralOptions,
+    CSVGeometryMode,
+    CSVGeometryBinaryEncoding
   } from './options';
 
-  export let options: CSVOptions = getDefaultCSVOptions();
+  export let options: CSVOptions;
   export let layer: AppFeatureLayerBase|undefined = undefined;
+  export let columns: string[]|undefined = undefined;
 
   let { delimiter } = options;
   let { xColumn, yColumn } = options.geometry as CSVGeometryXYOptions;
-  let { columnName, encoding } = options.geometry as CSVGeomtryBinaryOptions;
+  let { columnName, encoding } = options.geometry as CSVGeometryBinaryOptions;
   let mode: CSVGeometryMode = options.geometry.mode;
 
   let layerIsXY: boolean;
@@ -27,7 +27,13 @@
   enum GeometryType {
     None, XY, SingleColumn
   };
-  let geometryType = GeometryType.SingleColumn;
+  const getDefaultGeometryType = (): GeometryType => {
+    if (options.geometry.mode === 'xy') return GeometryType.XY;
+    if (options.geometry.mode === 'none') return GeometryType.None;
+    return GeometryType.SingleColumn;
+  };
+  let geometryType = getDefaultGeometryType();
+
 
   const updateOptions = (params: {
     geometryType: GeometryType,
@@ -84,8 +90,8 @@
 </div>
 <div class="mb-2">
   {#if geometryType === GeometryType.XY}
-    <CsvOptionsFormXY bind:xColumn={xColumn} bind:yColumn={yColumn} />
+    <CsvOptionsFormXY bind:xColumn={xColumn} bind:yColumn={yColumn} columns={columns} />
   {:else if geometryType === GeometryType.SingleColumn}
-    <CsvOptionsFormGeometry bind:mode={mode} bind:columnName={columnName} bind:encoding={encoding} />
+    <CsvOptionsFormGeometry bind:mode={mode} bind:columnName={columnName} bind:encoding={encoding} columns={columns} />
   {/if}
 </div>
