@@ -19,7 +19,7 @@
 
 <FormModal title="GeoJSON Download Options" on:submit={submit} submitText="Download" submitIconClass="fa fa-download mr-2">
   {#if !parent}<slot />{/if}
-  <SlideToggle name="pretty" size="sm" bind:checked={pretty}>
+  <SlideToggle name="pretty" size="sm" active="bg-primary-500" bind:checked={pretty}>
     Pretty GeoJSON <small>with spaces and indents</small>
   </SlideToggle>
   {#if pretty}

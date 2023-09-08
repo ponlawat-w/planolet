@@ -1,10 +1,16 @@
 <script lang="ts">
+  import { getMapLayersContext } from '../../contexts';
+  import { modalStore } from '@skeletonlabs/skeleton';
   import CsvOptionsForm from '../../csv/CSVOptionsForm.svelte';
   import FormModal from '../../modals/FormModal.svelte';
+  import { AppFeatureLayerBase } from '../features/base';
   import type { CSVOptions } from '../../csv/options';
-    import { modalStore } from '@skeletonlabs/skeleton';
 
   export let parent: any;
+
+  const { selectedLayerContext } = getMapLayersContext();
+  let layer: AppFeatureLayerBase|undefined;
+  $: layer = $selectedLayerContext instanceof AppFeatureLayerBase ? $selectedLayerContext : undefined;
   
   let options: CSVOptions;
 
@@ -17,5 +23,5 @@
 
 <FormModal title="CSV Download Options" on:submit={submit} submitText="Download" submitIconClass="fa fa-download mr-2">
   {#if !parent}<slot />{/if}
-  <CsvOptionsForm bind:options={options} />
+  <CsvOptionsForm layer={layer} bind:options={options} />
 </FormModal>

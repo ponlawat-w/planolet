@@ -1,14 +1,28 @@
 <script lang="ts">
+  import type { AppFeatureLayerBase } from '../layers/features/base';
+  import { SpatialCSVWriter } from '../layers/writer/csv';
   import CsvOptionsFormGeometry from './CSVOptionsFormGeometry.svelte';
   import CsvOptionsFormXY from './CSVOptionsFormXY.svelte';
-  import { getDefaultCSVOptions, type CSVOptions, type CSVGeometryXYOptions, type CSVGeomtryBinaryOptions, type CSVGeneralOptions, type CSVGeometryMode, type CSVGeometryBinaryEncoding } from './options';
+  import {
+    getDefaultCSVOptions,
+    type CSVOptions,
+    type CSVGeometryXYOptions,
+    type CSVGeomtryBinaryOptions,
+    type CSVGeneralOptions,
+    type CSVGeometryMode,
+    type CSVGeometryBinaryEncoding
+  } from './options';
 
   export let options: CSVOptions = getDefaultCSVOptions();
+  export let layer: AppFeatureLayerBase|undefined = undefined;
 
   let { delimiter } = options;
   let { xColumn, yColumn } = options.geometry as CSVGeometryXYOptions;
   let { columnName, encoding } = options.geometry as CSVGeomtryBinaryOptions;
   let mode: CSVGeometryMode = options.geometry.mode;
+
+  let layerIsXY: boolean;
+  $: layerIsXY = !layer || SpatialCSVWriter.layerIsXYPoints(layer) ? true : false;
 
   enum GeometryType {
     None, XY, SingleColumn
@@ -57,10 +71,12 @@
     <input type="radio" bind:group={geometryType} value={GeometryType.None}>
     None
   </label>
-  <label class="inline mr-2">
-    <input type="radio" bind:group={geometryType} value={GeometryType.XY}>
-    X Y Columns
-  </label>
+  {#if layerIsXY}
+    <label class="inline mr-2">
+      <input type="radio" bind:group={geometryType} value={GeometryType.XY}>
+      X Y Columns
+    </label>
+  {/if}
   <label class="inline mr-2">
     <input type="radio" bind:group={geometryType} value={GeometryType.SingleColumn}>
     Geometry Column

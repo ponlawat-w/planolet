@@ -5,7 +5,7 @@ import { LayerWriterBase } from './base';
 import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync';
 import CsvOptionsModal from './CSVOptionsModal.svelte';
 import type { AppLayer } from '../layer';
-import type { CSVGeneralOptions, CSVOptions } from '../../csv/options';
+import type { CSVGeneralOptions, CSVGeometryXYOptions, CSVOptions } from '../../csv/options';
 import type { ModalComponent } from '@skeletonlabs/skeleton';
 
 export abstract class CSVWriter<T extends CSVGeneralOptions> extends LayerWriterBase<T> {
@@ -35,8 +35,26 @@ export class SpatialCSVWriter extends CSVWriter<CSVOptions> {
     return layer instanceof AppFeatureLayerBase;
   }
 
+  public getNonSpatialRows(layer: AppFeatureLayerBase) {
+    const table = layer.getAttributesTable();
+    return [
+      table.headers.map(x => x.name),
+      ...table.rows
+    ];
+  }
+
+  public getXYRows(layer: AppFeatureLayerBase, options: CSVOptions<CSVGeometryXYOptions>): any[][] {
+    const table = layer.getFeaturesTable();
+    return [
+      [...table.headers.map(x => x.name), options.geometry.xColumn, options.geometry.yColumn],
+      ...table.rows.map((row, i) => [...row, ...SpatialCSVWriter.geometryToXY(table.geometries[i])])
+    ];
+  };
+
   public getRows(layer: AppLayer, options: CSVOptions): any[][] {
     if (!(layer instanceof AppFeatureLayerBase)) throw new Error('Unsupported layer type');
+    if (options.geometry.mode === 'none') return this.getNonSpatialRows(layer);
+    if (options.geometry.mode === 'xy') return this.getXYRows(layer, options as CSVOptions<CSVGeometryXYOptions>);
     const geometryFn = SpatialCSVWriter.getGeometryConversionFunction(options);
     if (!geometryFn) throw new Error('Invalid options');
     const table = layer.getFeaturesTable();
@@ -62,6 +80,13 @@ export class SpatialCSVWriter extends CSVWriter<CSVOptions> {
     return wkbGeometry.toString('base64');
   }
 
+  protected static geometryToXY(wkbGeometry: Buffer): [number|null, number|null] {
+    if (!wkbGeometry.length) return [null, null];
+    const geometry = WKXGeometry.parse(wkbGeometry).toGeoJSON();
+    if (geometry.type !== 'Point') throw new Error('Geometry is not point');
+    return [geometry.coordinates[0], geometry.coordinates[1]];
+  }
+
   protected static getGeometryConversionFunction(options: CSVOptions): undefined|((wkb: Buffer) => string) {
     if (!options || !options.geometry) return undefined;
     if (options.geometry.mode === 'geojson') return SpatialCSVWriter.geometryToGeoJSON;
@@ -69,5 +94,10 @@ export class SpatialCSVWriter extends CSVWriter<CSVOptions> {
     if (options.geometry.mode === 'wkb' && options.geometry.encoding === 'hex') return SpatialCSVWriter.geometryToWKBHex;
     if (options.geometry.mode === 'wkb' && options.geometry.encoding === 'base64') return SpatialCSVWriter.geometryToWKBBase64;
     return undefined;
+  }
+
+  public static layerIsXYPoints(layer: AppFeatureLayerBase): boolean {
+    const types = layer.getGeometryTypes();
+    return types.length === 1 && types[0] === 'Point';
   }
 };

@@ -4,7 +4,7 @@ import { Buffer } from 'buffer';
 import { FeatureDataTable } from './table';
 import { Geometry as WKXGeometry } from '../../wkx';
 import type { DataTable } from '../../table';
-import type { Feature, FeatureCollection, Geometry } from 'geojson';
+import type { Feature, FeatureCollection, GeoJsonGeometryTypes, Geometry } from 'geojson';
 
 export type CSVGeospaitaliseOptions = {
   delimiter: string,

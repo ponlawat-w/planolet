@@ -34,8 +34,8 @@ export type CSVGeomtryBinaryOptions = {
 
 export type CSVGeometryOptions = CSVNoneGeometry | CSVGeometryXYOptions | CSVGeometryTextOptions | CSVGeomtryBinaryOptions;
 
-export type CSVOptions = CSVGeneralOptions & {
-  geometry: CSVGeometryOptions
+export type CSVOptions<T extends CSVGeometryOptions = CSVGeometryOptions> = CSVGeneralOptions & {
+  geometry: T
 };
 
 export const getDefaultCSVOptions = (): CSVOptions => ({ delimiter: ',', geometry: { mode: 'none' } });
