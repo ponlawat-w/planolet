@@ -30,6 +30,15 @@
     document.documentElement.classList.remove('dark');
   }
 
+  $: if ($layersContext || $selectedLayerContext) {
+    for (const layer of $layersContext.objects) if (layer instanceof AppFeatureLayerBase) {
+      layer.setDefaultStyle();
+    }
+    if ($selectedLayerContext && $selectedLayerContext instanceof AppFeatureLayerBase) {
+      $selectedLayerContext.setSelectedStyle();
+    }
+  }
+
   let shouldRerenderLayers: boolean = false;
   layersContext.subscribe(() => {
     shouldRerenderLayers = true;

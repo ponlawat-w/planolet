@@ -3,8 +3,10 @@ import { Buffer } from 'buffer';
 import { Geometry } from '../../wkx';
 import type { FeatureCollection, Geometry as GeoJSONGeometry } from 'geojson';
 import { DataTable } from '../../table';
+import { v4 } from 'uuid';
+import type { RendererGeometry } from './renderer/renderer';
 
-export type WKXFeatureBase = { properties: Record<string, any> };
+export type WKXFeatureBase = { id: string };
 
 export type WKTFeature = WKXFeatureBase & {
   type: 'WKT',
@@ -37,10 +39,14 @@ export class AppWKXLayer extends AppFeatureLayerBase<WKXFeatures> {
       type: 'FeatureCollection',
       features: this._data.map(x => ({
         type: 'Feature',
-        properties: x.properties,
+        properties: { id: x.id },
         geometry: AppWKXLayer.featureToGeoJSON(x)
       }))
     }
+  }
+
+  public getRendererGeometries(): RendererGeometry[] {
+    return this._data.map(x => ({ id: x.id, geometry: AppWKXLayer.featureToGeoJSON(x) }));
   }
 
   public getGeometryTypeText(): string {
@@ -63,13 +69,13 @@ export class AppWKXLayer extends AppFeatureLayerBase<WKXFeatures> {
   }
 
   public getAttributesTable(): DataTable {
-    return DataTable.createFromRecords(this._data.map(x => x.properties));
+    return DataTable.createFromRecords(this._data.map(x => ({ id: x.id })), 'id');
   }
 
   public static strToWKT (str: string): WKTFeature|undefined {
     try {
       Geometry.parse(str);
-      return { type: 'WKT', data: str, properties: {} };
+      return { type: 'WKT', data: str, id: v4() };
     } catch { return undefined; }
   }
 
@@ -77,7 +83,7 @@ export class AppWKXLayer extends AppFeatureLayerBase<WKXFeatures> {
     try {
       const bytes = Uint8Array.from(str.match(/.{1,2}/g).map(x => parseInt(x, 16)));
       Geometry.parse(Buffer.from(bytes));
-      return { type: 'WKB', encoding: 'hex', data: bytes, properties: {} };
+      return { type: 'WKB', encoding: 'hex', data: bytes, id: v4() };
     } catch { return undefined; }
   }
 
@@ -85,7 +91,7 @@ export class AppWKXLayer extends AppFeatureLayerBase<WKXFeatures> {
     try {
       const bytes = Uint8Array.from(atob(str), x => x.charCodeAt(0));
       Geometry.parse(Buffer.from(bytes));
-      return { type: 'WKB', encoding: 'base64', data: bytes, properties: {} };
+      return { type: 'WKB', encoding: 'base64', data: bytes, id: v4() };
     } catch { return undefined; }
   }
 

@@ -7,19 +7,23 @@ import { DataTable, type TableColumn } from '../../table';
 import type { Feature, FeatureCollection, GeoJsonGeometryTypes, Geometry } from 'geojson';
 import type { CSVGeometryOptions, CSVOptions } from '../../csv/options';
 import { AppGeoJSONLayer } from './geojson';
+import type { RendererGeometry } from './renderer/renderer';
 
 const DELIMITERS_SET = [',', ';', '\t'];
+const FEATURE_ID_FIELD = '__FEATURE_ID__';
 
 export type AppCsvLayerData = {
   table: DataTable,
   options: CSVOptions
 };
 
+
 export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
   public constructor(name: string, table: DataTable, options: CSVOptions) {
     if (options.geometry.mode === 'none') {
       throw new Error('This is not a geospatialisable table');
     }
+    table.addRowIds(FEATURE_ID_FIELD);
     super(name, { table, options });
   }
 
@@ -40,9 +44,18 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
     const features: Feature[] = [];
     for (const row of this._data.table.rows) {
       const geometry = this.getGeometry(this._data.table.objectifyRow(row));
-      if (geometry) features.push({ type: 'Feature', properties: {}, geometry });
+      if (geometry) features.push({ type: 'Feature', properties: row, geometry });
     }
     return { type: 'FeatureCollection', features };
+  }
+
+  public getRendererGeometries(): RendererGeometry[] {
+    const idFieldIndex = this._data.table.headers.map(x => x.name).indexOf(FEATURE_ID_FIELD);
+    if (idFieldIndex < 0) throw new Error('Features have no IDs');
+    return this._data.table.rows.map(x => ({
+      id: x[idFieldIndex],
+      geometry: this.getGeometry(this._data.table.objectifyRow(x))
+    }));
   }
 
   public getGeometryTypeText(): string {
