@@ -7,7 +7,8 @@
   const dispatch = createEventDispatcher<{ drop: DragEvent & { currentTarget: EventTarget & HTMLDivElement } }>();
 </script>
 
-<div class="!m-0"
+<div role="grid" tabindex="-1"
+  class="!m-0"
   class:h-1={!dragging}
   class:h-2={dragging}
   class:invisible={!dragging}
