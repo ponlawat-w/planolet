@@ -1,8 +1,8 @@
-import { DataTable } from '../../table/table';
 import { AppFeatureLayerBase } from './base';
+import { DataTable } from '../../table';
+import { v4 } from 'uuid';
 import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import type { RendererGeometry } from './renderer/renderer';
-import { v4 } from 'uuid';
 
 type FeatureProperties = { '__FEATURE_ID__': string } & Record<string, any>;
 export type AppGeoJSONLayerData = FeatureCollection<Geometry, FeatureProperties> | Feature<Geometry, FeatureProperties> | Geometry;
@@ -88,6 +88,17 @@ export class AppGeoJSONLayer extends AppFeatureLayerBase<AppGeoJSONLayerData> {
     return DataTable.createFromRecords([
       { id: this._singleGeometryFeatureId }
     ], 'id');
+  }
+
+  public updateAttributes(id: string, record: Record<string, any>): void {
+    if (this._data.type === 'Feature') {
+      if (this._data.properties[ID_FIELD] !== id) return;
+      this._data.properties = { ...this._data.properties, ...record };
+    } else if (this._data.type === 'FeatureCollection') {
+      const features = this._data.features.filter(x => x.properties[ID_FIELD] === id);
+      if (!features.length) return;
+      features[0].properties = { ...features[0].properties, ...record };
+    }
   }
 
   public static rawIsValid(raw: string): boolean {

@@ -4,7 +4,7 @@ import { FeatureGroup, Map } from 'leaflet';
 import { Geometry as WKXGeometry } from '../../wkx';
 import { getDefaultStyle, getFeatureHoveredStyle, getFeatureSelectedStyle, getLayerSelectedStyle, type RendererFeatureGroupStyle, type RendererGeometry } from './renderer/renderer';
 import { RendererFeatureGroupCollection } from './renderer/feature-group-collection';
-import type { DataTable } from '../../table/table';
+import type { DataTable } from '../../table';
 import type { FeatureCollection, GeoJsonGeometryTypes } from 'geojson';
 
 export type AttributedFeature = Record<string, any> & { properties: Record<string, any> };
@@ -42,6 +42,7 @@ export abstract class AppFeatureLayerBase<DataType = any> extends AppObjectLayer
   public abstract getGeometryTypeText(): string;
   public abstract getFeaturesCount(): number;
   public abstract getAttributesTable(): DataTable;
+  public abstract updateAttributes(id: string, record: Record<string, any>): void;
 
   public getGeometryTypes(): GeoJsonGeometryTypes[] {
     return [...(new Set<GeoJsonGeometryTypes>(this.getFeatureCollection().features.map(x => x.geometry.type)))];

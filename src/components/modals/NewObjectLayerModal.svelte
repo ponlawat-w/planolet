@@ -8,8 +8,8 @@
   import FormModal from '../../lib/modals/FormModal.svelte';
   import type { AppObjectLayer } from '../../lib/layers/object';
   import type { CSVOptions } from '../../lib/csv/options';
-  import type { DataTable } from '../../lib/table/table';
   import type { ModalParent } from '../../types';
+  import type { DataTable } from '../../lib/table';
 
   export let parent: ModalParent;
 

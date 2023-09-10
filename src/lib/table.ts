@@ -1,6 +1,6 @@
 import { parse as parseCsv } from 'csv/browser/esm/sync';
 import { v4 } from 'uuid';
-import type { CSVGeneralOptions } from '../csv/options';
+import type { CSVGeneralOptions } from './csv/options';
 
 export type TableColumnType = 'raw';
 
@@ -42,8 +42,12 @@ export class DataTable {
     this._idField = fieldName;
   }
 
+  public getColumnIndex(column: string): number {
+    return this._columns.map(x => x.name).indexOf(column);
+  }
+
   public getIdFieldIndex(): number {
-    return this._idField ? this._columns.map(x => x.name).indexOf(this._idField) : -1;
+    return this._idField ? this.getColumnIndex(this._idField) : -1;
   }
 
   public setIdField(fieldName: string) {
@@ -66,6 +70,19 @@ export class DataTable {
     }));
 
     return { columns, rows };
+  }
+
+  public getRowIdx(id: string): number {
+    const idIdx = this.getIdFieldIndex();
+    if (idIdx < 0) return -1;
+    for (let i = 0; i < this._rows.length; i++) {
+      if (this._rows[i][idIdx] === id) return i;
+    }
+    return -1;
+  }
+
+  public setData(rowIdx: number, colIdx: number, value: any) {
+    this._rows[rowIdx][colIdx] = value;
   }
 
   public objectifyRow<T = any>(row: TableRow): T {

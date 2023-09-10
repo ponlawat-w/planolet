@@ -3,7 +3,7 @@ import { AppFeatureLayerBase } from './base';
 import { Buffer } from 'buffer';
 import { FeatureDataTable } from './table';
 import { Geometry as WKXGeometry } from '../../wkx';
-import { DataTable, type TableColumn } from '../../table/table';
+import { DataTable, type TableColumn } from '../../table';
 import type { Feature, FeatureCollection, GeoJsonGeometryTypes, Geometry } from 'geojson';
 import type { CSVGeometryOptions, CSVOptions } from '../../csv/options';
 import { AppGeoJSONLayer } from './geojson';
@@ -85,6 +85,17 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
       geometries.push(geometry ? WKXGeometry.parseGeoJSON(geometry).toWkb() : Buffer.from([]));
     }
     return new FeatureDataTable(this._data.table.columns, this._data.table.rows, geometries);
+  }
+
+  public updateAttributes(id: string, record: Record<string, any>): void {
+    const rowIdx = this._data.table.getRowIdx(id);
+    if (rowIdx < 0) return;
+
+    for (const column of Object.keys(record)) {
+      const colIdx = this._data.table.getColumnIndex(column);
+      if (colIdx < 0) continue;
+      this._data.table.setData(rowIdx, colIdx, record[column]);
+    }
   }
 
   private static getGeometryOptionsFromColumns(columns: TableColumn[]): CSVGeometryOptions {

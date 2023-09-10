@@ -43,6 +43,10 @@
   selectedLayerContext.subscribe(() => {
     selectedFeatureIdContext.set(undefined);
   });
+  selectedFeatureIdContext.subscribe(id => {
+    if (id || !($selectedLayerContext instanceof AppFeatureLayerBase)) return;
+    $selectedLayerContext.setLayerSelectedStyle();
+  });
 
   let shouldRerenderLayers: boolean = false;
   layersContext.subscribe(() => {
