@@ -57,6 +57,8 @@
     }
     selectedLayer.updateAttributes(id, record);
     selectedLayer = selectedLayer;
+    selectedFeatureIdContext.set(undefined);
+    selectedFeatureIdContext.set(id);
     toastStore.trigger(getSuccessToast('Feature properties updated'));
   };
 </script>
@@ -76,8 +78,10 @@
           <EditTableRow row={row} on:submit={editSubmit} on:cancel={() => { editingIndex = -1; }} />
         {:else}
           <tr class:hover:!bg-tertiary-500={selectedId !== row.id}
+            class:hover:dark:text-black={selectedId !== row.id}
             class:hover:!bg-secondary-400={selectedId === row.id}
             class:!bg-secondary-300={selectedId === row.id}
+            class:dark:text-black={selectedId === row.id}
             on:click={() => click(row.id)}
             on:mouseenter={() => mouseEnter(row.id)}
             on:mouseleave={() => mouseLeave(row.id)}>

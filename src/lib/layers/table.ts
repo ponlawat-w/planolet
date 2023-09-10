@@ -9,8 +9,4 @@ export class AppTableLayer extends AppLayer {
     super(name);
     this.data = data;
   }
-
-  public getTableSource(): TableSource {
-    return this.data.toTableSource();
-  }
 };

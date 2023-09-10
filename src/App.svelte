@@ -9,11 +9,13 @@
   import { AppFeatureLayerBase } from './lib/layers/features/base';
   import { AppLayers } from './lib/layers/layers';
   import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
+  import { AppLayer } from './lib/layers/layer';
   import { CONTEXT_LAYERS, CONTEXT_MAP, type ContextSelectedLayer, type ContextLayers, type ContextMap, CONTEXT_SELECTED_LAYER, type ContextSelectedFeatureId, CONTEXT_SELECTED_FEATURE_ID } from './lib/contexts';
   import { isDarkMode } from './lib/theme';
   import { storePopup } from '@skeletonlabs/skeleton';
   import { writable } from 'svelte/store';
   import AttributesTable from './components/table/AttributesTable.svelte';
+  import FeatureInfo from './components/layers/FeatureInfo.svelte';
   import LayerInfo from './components/layers/LayerInfo.svelte';
   import LayersBar from './components/layers/LayersList.svelte';
   import Map from './components/Map.svelte';
@@ -21,10 +23,14 @@
   const layers = new AppLayers();
   
   const mapContext = setContext<ContextMap>(CONTEXT_MAP, writable(undefined));
-  const layersContext = setContext<ContextLayers>(CONTEXT_LAYERS, layers.context);
+  const layersContext = setContext<ContextLayers>(CONTEXT_LAYERS, writable(layers));
   const selectedLayerContext = setContext<ContextSelectedLayer>(CONTEXT_SELECTED_LAYER, writable(undefined));
   const selectedFeatureIdContext = setContext<ContextSelectedFeatureId>(CONTEXT_SELECTED_FEATURE_ID, writable(undefined));
-  
+
+  layers.setContext(layersContext);
+  AppLayer.selectedLayerContext = selectedLayerContext;
+  AppLayer.selectedFeatureIdContext = selectedFeatureIdContext;
+
   $: if ($isDarkMode) {
     document.documentElement.classList.add('dark');
   } else {
@@ -37,6 +43,7 @@
     }
     if ($selectedLayerContext && $selectedLayerContext instanceof AppFeatureLayerBase) {
       $selectedLayerContext.setLayerSelectedStyle();
+      if ($selectedFeatureIdContext) $selectedLayerContext.setFeatureSelectedStyle($selectedFeatureIdContext);
     }
   }
   
@@ -115,8 +122,17 @@
   <Map />
   <svelte:fragment slot="sidebarRight">
     <div class="relative h-full">
-      {#if $selectedLayerContext && showRightBar}
-        <LayerInfo />
+      {#if showRightBar}
+        {#if $selectedLayerContext}
+          <div class={'relative overflow-y-auto' + ($selectedFeatureIdContext ? ' h-1/2' : ' h-full')}>
+            <LayerInfo />
+          </div>
+        {/if}
+        {#if $selectedFeatureIdContext}
+          <div class="absolute bottom-0 h-1/2 w-full">
+            <FeatureInfo />
+          </div>
+        {/if}
       {/if}
       <button class="absolute btn btn-sm bg-surface-200 text-black w-2 px-0 py-5 left-0 top-1/2" on:click={toggleRightBar}>
         <i class="fa" class:fa-angle-right={showRightBar} class:fa-angle-left={!showRightBar}></i>

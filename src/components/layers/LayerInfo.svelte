@@ -8,7 +8,7 @@
   import type { LayerWriterBase } from '../../lib/layers/writer/base';
   import { WRITERS_COLLECTION } from '../../lib/layers/writer/collection';
 
-  const { mapContext, layersContext, selectedLayerContext, selectedFeatureIdContext } = getMapLayersContext();
+  const { mapContext, layersContext, selectedLayerContext } = getMapLayersContext();
 
   let editingName = false;
   let newName: string;
@@ -48,8 +48,7 @@
 </script>
 
 {#if $selectedLayerContext}
-<div class="h-full relative">
-  <div class="p-2">
+  <div class="px-3 py-2">
     <a href={'javascript:void(0);'} class="float-right" on:click={() => selectedLayerContext.set(undefined)}><i class="fa fa-times"></i></a>
     <div class="text-center mb-2">
       {#if editingName}
@@ -119,13 +118,4 @@
       Remove Layer
     </button>
   </div>
-  {#if $selectedFeatureIdContext}
-    <div class="absolute bottom-0 p-2 w-full">
-      <button class="btn btn-sm w-full variant-filled-secondary" on:click={() => selectedFeatureIdContext.set(undefined)}>
-        <i class="fa-regular fa-circle-xmark mr-2"></i>
-        Deselect Feature
-      </button>
-    </div>
-  {/if}
-</div>
 {/if}

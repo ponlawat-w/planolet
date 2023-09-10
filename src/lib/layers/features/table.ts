@@ -6,15 +6,16 @@ export class FeatureDataTable extends DataTable {
 
   public get geometries(): Buffer[] { return this._geometries; };
 
-  public constructor(headers: TableColumn[], rows: TableRow[], geometries: Buffer[]) {
+  public constructor(headers: TableColumn[], rows: TableRow[], geometries: Buffer[], idField?: string) {
     if (rows.length !== geometries.length) {
       throw new Error('Data records lenght must match geometries length.');
     }
     super(headers, rows);
     this._geometries = geometries;
+    this._idField = idField;
   }
 
   public static fromDataTable(dataTable: DataTable, geometries: Buffer[]): FeatureDataTable {
-    return new FeatureDataTable(dataTable.columns, dataTable.rows, geometries);
+    return new FeatureDataTable(dataTable.columns, dataTable.rows, geometries, dataTable.idField);
   }
 }

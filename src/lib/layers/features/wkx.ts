@@ -68,8 +68,13 @@ export class AppWKXLayer extends AppFeatureLayerBase<WKXFeatures> {
     return this._data.length;
   }
 
-  public getAttributesTable(): DataTable {
-    return DataTable.createFromRecords(this._data.map(x => ({ id: x.id })), 'id');
+  public getAttributesTable(includeIdField: boolean = true): DataTable {
+    return includeIdField ? DataTable.createFromRecords(this._data.map(x => ({ id: x.id })), 'id') : DataTable.createFromRecords(this._data.map(_ => ({})));
+  }
+
+  public getRecordFromId(id: string): Record<string, any>|undefined {
+    for (const feature of this._data) if (feature.id === id) return { [this._idField]: feature.id };
+    return undefined;
   }
 
   public updateAttributes(): void {

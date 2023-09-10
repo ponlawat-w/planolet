@@ -4,32 +4,37 @@ import { v4 } from 'uuid';
 import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import type { RendererGeometry } from './renderer/renderer';
 
-type FeatureProperties = { '__FEATURE_ID__': string } & Record<string, any>;
-export type AppGeoJSONLayerData = FeatureCollection<Geometry, FeatureProperties> | Feature<Geometry, FeatureProperties> | Geometry;
-
-const ID_FIELD = '__FEATURE_ID__';
+export type AppGeoJSONLayerData = FeatureCollection | Feature | Geometry;
 
 export class AppGeoJSONLayer extends AppFeatureLayerBase<AppGeoJSONLayerData> {
   protected _singleGeometryFeatureId: string|undefined = undefined;
 
   public constructor(param: { name: string, raw?: string, data?: AppGeoJSONLayerData }) {
+    let data: AppGeoJSONLayerData;
     if (param.raw && AppGeoJSONLayer.rawIsValid(param.raw)) {
-      super(param.name, JSON.parse(param.raw));
-    } else if (param.data) {
-      super(param.name, param.data);
+      data = JSON.parse(param.raw);
+    }
+
+    const idField = '__FEATURE_ID__';
+    let singleGeometry = false;
+    if (data.type === 'Feature') {
+      data.properties[idField] = v4();
+    } else if (data.type === 'FeatureCollection') {
+      for (const feature of data.features) {
+        feature.properties[idField] = v4();
+      }
+    } else {
+      singleGeometry = true;
+    }
+    
+    if (data) {
+      super(param.name, data);
     } else {
       throw new Error('Invalid parameter');
     }
-  }
+    this._idField = idField;
 
-  private setFeatureIds() {
-    if (this._data.type === 'Feature') {
-      this._data.properties.__FEATURE_ID__ = v4();
-    } else if (this._data.type === 'FeatureCollection') {
-      for (const feature of this._data.features) {
-        feature.properties.__FEATURE_ID__ = v4();
-      }
-    } else {
+    if (singleGeometry) {
       this._singleGeometryFeatureId = v4();
     }
   }
@@ -48,7 +53,6 @@ export class AppGeoJSONLayer extends AppFeatureLayerBase<AppGeoJSONLayerData> {
   }
 
   public getRendererGeometries(): RendererGeometry[] {
-    this.setFeatureIds();
     if (this._data.type === 'Feature') {
       return [{ id: this._data.properties.__FEATURE_ID__, geometry: this._data.geometry }];
     }
@@ -82,20 +86,40 @@ export class AppGeoJSONLayer extends AppFeatureLayerBase<AppGeoJSONLayerData> {
     return this._data.type === 'FeatureCollection' ? this._data.features.length : 1;
   }
 
-  public getAttributesTable(): DataTable {
-    if (this._data.type === 'Feature') return DataTable.createFromRecords([this._data.properties], ID_FIELD);
-    if (this._data.type === 'FeatureCollection') return DataTable.createFromRecords(this._data.features.map(x => x.properties), ID_FIELD);
-    return DataTable.createFromRecords([
-      { id: this._singleGeometryFeatureId }
-    ], 'id');
+  private getRecords(): Record<string, any>[] {
+    if (this._data.type === 'Feature') return [{ ...this._data.properties }];
+    if (this._data.type === 'FeatureCollection') return this._data.features.map(x => ({ ...x.properties }));
+    return [{ id: this._singleGeometryFeatureId }];
+  }
+
+  public getAttributesTable(includeIdField: boolean = true): DataTable {
+    const records = this.getRecords();
+    if (!includeIdField) {
+      for (const record of records) {
+        delete record[this._idField];
+      }
+    }
+    return DataTable.createFromRecords(records, includeIdField ? this.idField : undefined);
+  }
+
+  public getRecordFromId(id: string): Record<string, any>|undefined {
+    if (this._data.type === 'FeatureCollection') {
+      for (const feature of this._data.features) if (feature.properties[this._idField] === id) return feature.properties;
+      return undefined;
+    }
+    if (this._data.type === 'Feature') {
+      return this._data.properties[this._idField] === id ? this._data.properties : undefined;
+    }
+    if (this._singleGeometryFeatureId === id) return { [this._idField]: id };
+    return undefined;
   }
 
   public updateAttributes(id: string, record: Record<string, any>): void {
     if (this._data.type === 'Feature') {
-      if (this._data.properties[ID_FIELD] !== id) return;
+      if (this._data.properties[this._idField] !== id) return;
       this._data.properties = { ...this._data.properties, ...record };
     } else if (this._data.type === 'FeatureCollection') {
-      const features = this._data.features.filter(x => x.properties[ID_FIELD] === id);
+      const features = this._data.features.filter(x => x.properties[this._idField] === id);
       if (!features.length) return;
       features[0].properties = { ...features[0].properties, ...record };
     }

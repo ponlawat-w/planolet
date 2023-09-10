@@ -2,7 +2,6 @@ import { AppBasemapLayer } from './basemap';
 import { AppObjectLayer } from './object';
 import { getPrimaryToast } from '../toasts';
 import { modalStore, toastStore } from '@skeletonlabs/skeleton';
-import { writable } from 'svelte/store';
 import type { AppMapLayer } from './map-layer';
 import type { ContextLayers, ContextSelectedLayer } from '../contexts';
 import type { FeatureGroup, Map } from 'leaflet';
@@ -18,12 +17,14 @@ export class AppLayers {
   public get objects() { return this._objects; }
   public get context() { return this._context; }
 
-  public constructor() {
-    this._context = writable(this);
+  public constructor() {}
+
+  public setContext(context: ContextLayers) {
+    this._context = context;
   }
 
   private updateContext() {
-    this._context.set(this);
+    if (this._context) this._context.set(this);
   }
 
   public setMap(map: Map) {

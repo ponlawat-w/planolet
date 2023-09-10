@@ -27,6 +27,7 @@ export class DataTable {
 
   public get columns(): TableColumn[] { return this._columns; }
   public get rows(): TableRow[] { return this._rows; }
+  public get idField(): string|undefined { return this._idField; }
 
   public constructor(headers: TableColumn[], rows: TableRow[], idField?: string) {
     this._columns = headers;

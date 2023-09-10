@@ -35,8 +35,8 @@ export class SpatialCSVWriter extends CSVWriter<CSVOptions> {
     return layer instanceof AppFeatureLayerBase;
   }
 
-  public getNonSpatialRows(layer: AppFeatureLayerBase) {
-    const table = layer.getAttributesTable();
+  public getNonSpatialRows(layer: AppFeatureLayerBase): any[][] {
+    const table = layer.getAttributesTable(false);
     return [
       table.columns.map(x => x.name),
       ...table.rows
@@ -44,12 +44,12 @@ export class SpatialCSVWriter extends CSVWriter<CSVOptions> {
   }
 
   public getXYRows(layer: AppFeatureLayerBase, options: CSVOptions<CSVGeometryXYOptions>): any[][] {
-    const table = layer.getFeaturesTable();
+    const table = layer.getFeaturesTable(false);
     return [
       [...table.columns.map(x => x.name), options.geometry.xColumn, options.geometry.yColumn],
       ...table.rows.map((row, i) => [...row, ...SpatialCSVWriter.geometryToXY(table.geometries[i])])
     ];
-  };
+  }
 
   public getRows(layer: AppLayer, options: CSVOptions): any[][] {
     if (!(layer instanceof AppFeatureLayerBase)) throw new Error('Unsupported layer type');
@@ -57,9 +57,9 @@ export class SpatialCSVWriter extends CSVWriter<CSVOptions> {
     if (options.geometry.mode === 'xy') return this.getXYRows(layer, options as CSVOptions<CSVGeometryXYOptions>);
     const geometryFn = SpatialCSVWriter.getGeometryConversionFunction(options);
     if (!geometryFn) throw new Error('Invalid options');
-    const table = layer.getFeaturesTable();
+    const table = layer.getFeaturesTable(false);
     return [
-      [...table.columns.map(x => x.name), 'SHAPE'],
+      [...table.columns.map(x => x.name), options.geometry.columnName],
       ...table.rows.map((row, i) => [...row, geometryFn(table.geometries[i])])
     ];
   }

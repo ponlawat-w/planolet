@@ -43,12 +43,23 @@ export class GeoJSONWriter extends LayerWriterBase<GeoJSONWriterOptions> {
   public static getFeatureCollection(layer: AppLayer): FeatureCollection {
     if (layer instanceof AppGeoJSONLayer) {
       const data = layer.data;
-      if (data.type === 'FeatureCollection') return data;
-      if (data.type === 'Feature') return { type: 'FeatureCollection', features: [data] };
+      if (data.type === 'FeatureCollection') return {
+        ...data,
+        features: [
+          ...data.features.map(feature => ({
+            ...feature,
+            properties: { ...feature.properties, [layer.idField]: undefined }
+          }))
+        ]
+      };
+      if (data.type === 'Feature') return {
+        type: 'FeatureCollection',
+        features: [{ ...data, properties: { ...data.properties, [layer.idField]: undefined } }]
+      };
       return { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: data, properties: {} }] };
     }
     if (layer instanceof AppFeatureLayerBase) {
-      const table = layer.getFeaturesTable();
+      const table = layer.getFeaturesTable(false);
       const features: Feature[] = [];
       for (let i = 0; i < table.rows.length; i++) {
         const properties = table.objectifyRow(table.rows[i]);

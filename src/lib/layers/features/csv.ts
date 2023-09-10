@@ -25,6 +25,11 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
     }
     table.addRowIds(FEATURE_ID_FIELD);
     super(name, { table, options });
+    this._idField = FEATURE_ID_FIELD;
+    const idFieldIndex = this._data.table.getIdFieldIndex();
+    if (idFieldIndex > 0) {
+      this._data.table.columns[idFieldIndex].hidden = true;
+    }
   }
 
   public getGeometry(row: any): Geometry|undefined {
@@ -74,17 +79,30 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
     return this._data.table.rows.length;
   }
   
-  public getAttributesTable(): DataTable {
-    return this._data.table;
+  public getAttributesTable(includeIdField: boolean = true): DataTable {
+    if (includeIdField) return this._data.table;
+    const idFieldIdx = this._data.table.getIdFieldIndex();
+    return new DataTable(
+      this._data.table.columns.filter((_, i) => i !== idFieldIdx),
+      this._data.table.rows.map(row => row.filter((_, i) => i !== idFieldIdx))
+    );
   }
 
-  public getFeaturesTable(): FeatureDataTable {
+  public getFeaturesTable(includeIdField: boolean = true): FeatureDataTable {
     const geometries: Buffer[] = [];
-    for (const row of this._data.table.rows) {
-      const geometry = this.getGeometry(this._data.table.objectifyRow(row));
+    const table = includeIdField ? this._data.table : this.getAttributesTable(false);
+    for (const row of table.rows) {
+      const geometry = this.getGeometry(table.objectifyRow(row));
       geometries.push(geometry ? WKXGeometry.parseGeoJSON(geometry).toWkb() : Buffer.from([]));
     }
-    return new FeatureDataTable(this._data.table.columns, this._data.table.rows, geometries);
+    return new FeatureDataTable(table.columns, table.rows, geometries);
+  }
+
+  public getRecordFromId(id: string): Record<string, any>|undefined {
+    const idIdx = this._data.table.getIdFieldIndex();
+    if (idIdx < 0) return undefined;
+    for (const row of this._data.table.rows) if (row[idIdx] === id) return this._data.table.objectifyRow(row);
+    return undefined;
   }
 
   public updateAttributes(id: string, record: Record<string, any>): void {

@@ -15,6 +15,7 @@ export type AttributesTable = {
 };
 
 export abstract class AppFeatureLayerBase<DataType = any> extends AppObjectLayer<FeatureGroup> {
+  protected _idField: string = '__FEATURE_ID__';
   protected _data: DataType;
   protected _layersCollection: RendererFeatureGroupCollection;
 
@@ -24,6 +25,7 @@ export abstract class AppFeatureLayerBase<DataType = any> extends AppObjectLayer
   public featureHoveredStyle: RendererFeatureGroupStyle = getFeatureHoveredStyle();
   public featureSelectedStyle: RendererFeatureGroupStyle = getFeatureSelectedStyle();
 
+  public get idField() { return this._idField; }
   public get data() { return this._data; }
 
   public constructor(name: string, data: DataType, url?: string) {
@@ -35,21 +37,23 @@ export abstract class AppFeatureLayerBase<DataType = any> extends AppObjectLayer
     this._layersCollection = RendererFeatureGroupCollection.createFromGeometries(geometries);
     this._layersCollection.setAllStyles(this.defaultStyle);
     this.leaflet = new FeatureGroup(this._layersCollection.layers);
+    this.bindEvents();
   }
 
   public abstract getFeatureCollection(): FeatureCollection;
   public abstract getRendererGeometries(): RendererGeometry[];
   public abstract getGeometryTypeText(): string;
   public abstract getFeaturesCount(): number;
-  public abstract getAttributesTable(): DataTable;
+  public abstract getAttributesTable(includeIdField?: boolean): DataTable;
+  public abstract getRecordFromId(id: string): Record<string, any>|undefined;
   public abstract updateAttributes(id: string, record: Record<string, any>): void;
 
   public getGeometryTypes(): GeoJsonGeometryTypes[] {
     return [...(new Set<GeoJsonGeometryTypes>(this.getFeatureCollection().features.map(x => x.geometry.type)))];
   }
   
-  public getFeaturesTable(): FeatureDataTable {
-    const table = this.getAttributesTable();
+  public getFeaturesTable(includeIdField?: boolean): FeatureDataTable {
+    const table = this.getAttributesTable(includeIdField);
     const geometries = this.getFeatureCollection().features.map(x => WKXGeometry.parseGeoJSON(x.geometry).toWkb());
     return FeatureDataTable.fromDataTable(table, geometries);
   }
@@ -78,5 +82,15 @@ export abstract class AppFeatureLayerBase<DataType = any> extends AppObjectLayer
   public setFeatureSelectedStyle(id?: string) {
     if (!id) return this._layersCollection.setAllStyles(this.featureSelectedStyle);
     this._layersCollection.setStyle(id, this.featureSelectedStyle);
+  }
+
+  protected bindEvents() {
+    for (const layer of this._layersCollection.layers) {
+      layer.addEventListener('click', () => {
+        if (!AppFeatureLayerBase.selectedLayerContext || !AppFeatureLayerBase.selectedFeatureIdContext) return;
+        AppFeatureLayerBase.selectedLayerContext.set(this);
+        AppFeatureLayerBase.selectedFeatureIdContext.set(layer.id);
+      });
+    }
   }
 }
