@@ -8,7 +8,7 @@
   import FormModal from '../../lib/modals/FormModal.svelte';
   import type { AppObjectLayer } from '../../lib/layers/object';
   import type { CSVOptions } from '../../lib/csv/options';
-  import type { DataTable } from '../../lib/table';
+  import type { DataTable } from '../../lib/table/table';
   import type { ModalParent } from '../../types';
 
   export let parent: ModalParent;
@@ -27,7 +27,7 @@
   let columns: string[]|undefined = undefined;
   $: if (csvInterpretResult) {
     type = AppFeatureLayerDataType.CSV;
-    columns = csvInterpretResult.preview.headers.map(x => x.name);
+    columns = csvInterpretResult.preview.columns.map(x => x.name);
   } else {
     columns = undefined;
   }

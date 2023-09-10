@@ -1,4 +1,4 @@
-import { CircleMarker, FeatureGroup, Layer, type CircleMarkerOptions, type LayerOptions, type PathOptions, Polyline, Polygon } from 'leaflet';
+import { CircleMarker, FeatureGroup, Layer, type LayerOptions, Polyline, Polygon } from 'leaflet';
 import type { RendererFeatureGroupStyle } from './renderer';
 
 export class RendererFeatureGroup extends FeatureGroup {
@@ -11,9 +11,9 @@ export class RendererFeatureGroup extends FeatureGroup {
 
   public setFeaturesStyle(styles: RendererFeatureGroupStyle) {
     for (const layer of this.getLayers()) {
-      if (layer instanceof Polygon) return layer.setStyle(styles.polygonStyle);
-      if (layer instanceof Polyline) return layer.setStyle(styles.lineStringStyle);
-      if (layer instanceof CircleMarker) return layer.setStyle(styles.pointStyle);
+      if (layer instanceof Polygon) layer.setStyle(styles.polygonStyle);
+      else if (layer instanceof Polyline) layer.setStyle(styles.lineStringStyle);
+      else if (layer instanceof CircleMarker) layer.setStyle(styles.pointStyle);
     }
   }
 };

@@ -38,7 +38,7 @@ export class SpatialCSVWriter extends CSVWriter<CSVOptions> {
   public getNonSpatialRows(layer: AppFeatureLayerBase) {
     const table = layer.getAttributesTable();
     return [
-      table.headers.map(x => x.name),
+      table.columns.map(x => x.name),
       ...table.rows
     ];
   }
@@ -46,7 +46,7 @@ export class SpatialCSVWriter extends CSVWriter<CSVOptions> {
   public getXYRows(layer: AppFeatureLayerBase, options: CSVOptions<CSVGeometryXYOptions>): any[][] {
     const table = layer.getFeaturesTable();
     return [
-      [...table.headers.map(x => x.name), options.geometry.xColumn, options.geometry.yColumn],
+      [...table.columns.map(x => x.name), options.geometry.xColumn, options.geometry.yColumn],
       ...table.rows.map((row, i) => [...row, ...SpatialCSVWriter.geometryToXY(table.geometries[i])])
     ];
   };
@@ -59,7 +59,7 @@ export class SpatialCSVWriter extends CSVWriter<CSVOptions> {
     if (!geometryFn) throw new Error('Invalid options');
     const table = layer.getFeaturesTable();
     return [
-      [...table.headers.map(x => x.name), 'SHAPE'],
+      [...table.columns.map(x => x.name), 'SHAPE'],
       ...table.rows.map((row, i) => [...row, geometryFn(table.geometries[i])])
     ];
   }

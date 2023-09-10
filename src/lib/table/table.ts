@@ -1,56 +1,77 @@
 import { parse as parseCsv } from 'csv/browser/esm/sync';
-import type { TableSource } from '@skeletonlabs/skeleton';
-import type { CSVGeneralOptions } from './csv/options';
 import { v4 } from 'uuid';
+import type { CSVGeneralOptions } from '../csv/options';
 
 export type TableColumnType = 'raw';
 
 export type TableColumn = {
   name: string,
-  type: TableColumnType
+  type: TableColumnType,
+  hidden?: boolean
 };
 
 export type TableRow = any[];
 
+export type TableDataSourceRow = { id: string|undefined, data: TableRow };
+export type TableDataSource = {
+  columns: string[],
+  rows: TableDataSourceRow[]
+};
+
+const filterRowVisibleColumns = (row: TableRow, columnIndicies: number[]): TableRow => columnIndicies.map(i => row[i]);
+
 export class DataTable {
-  protected _headers: TableColumn[];
+  protected _columns: TableColumn[];
   protected _rows: TableRow[];
   protected _idField: string|undefined = undefined;
 
-  public get headers(): TableColumn[] { return this._headers; }
+  public get columns(): TableColumn[] { return this._columns; }
   public get rows(): TableRow[] { return this._rows; }
 
   public constructor(headers: TableColumn[], rows: TableRow[], idField?: string) {
-    this._headers = headers;
+    this._columns = headers;
     this._rows = rows;
-    this._idField = idField;
+    if (idField) this.setIdField(idField);
   }
 
   public addRowIds(fieldName = '__ROW_ID__') {
-    this._headers.push({ name: fieldName, type: 'raw' });
+    this._columns.push({ name: fieldName, type: 'raw' });
     for (const row of this._rows) {
       row.push(v4());
     }
     this._idField = fieldName;
   }
 
-  public setIdField(fieldName: string) {
-    this._idField = fieldName;
+  public getIdFieldIndex(): number {
+    return this._idField ? this._columns.map(x => x.name).indexOf(this._idField) : -1;
   }
 
-  public toTableSource(): TableSource {
-    const idFieldIndex = this._idField ? this._headers.map(x => x.name).indexOf(this._idField) : -1;
-    return {
-      head: this._headers.filter((_, i) => idFieldIndex ? idFieldIndex !== i : true).map(x => x.name),
-      body: this._rows.map(row => row.filter((_, i) => idFieldIndex > -1 ? idFieldIndex !== i : true)),
-      meta: idFieldIndex > -1 ? this._rows.map(x => [x[idFieldIndex]]) : undefined
-    };
+  public setIdField(fieldName: string) {
+    this._idField = fieldName;
+    const idx = this.getIdFieldIndex();
+    if (idx < 0) throw new Error('ID field does not exist');
+    this._columns[idx].hidden = true;
+  }
+
+  public toTableDataSource(): TableDataSource {
+    const idFieldIndex = this.getIdFieldIndex();
+    const visibleColumns: { col: TableColumn, idx: number }[]
+      = this._columns.map((col, idx) =>  col.hidden ? undefined : ({ col, idx })).filter(x => x);
+    const visibleColumnIndices: number[] = visibleColumns.map(x => x.idx);
+
+    const columns = visibleColumns.map(x => x.col.name);
+    const rows = this._rows.map(row => ({
+      id: idFieldIndex > -1 ? row[idFieldIndex] : undefined,
+      data: filterRowVisibleColumns(row, visibleColumnIndices)
+    }));
+
+    return { columns, rows };
   }
 
   public objectifyRow<T = any>(row: TableRow): T {
     const obj = {};
-    for (let i = 0; i < this._headers.length; i++) {
-      obj[this._headers[i].name] = row[i];
+    for (let i = 0; i < this._columns.length; i++) {
+      obj[this._columns[i].name] = row[i];
     }
     return obj as T;
   }

@@ -9,7 +9,7 @@
   import { AppFeatureLayerBase } from './lib/layers/features/base';
   import { AppLayers } from './lib/layers/layers';
   import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
-  import { CONTEXT_LAYERS, CONTEXT_MAP, type ContextSelectedLayer, type ContextLayers, type ContextMap, CONTEXT_SELECTED_LAYER } from './lib/contexts';
+  import { CONTEXT_LAYERS, CONTEXT_MAP, type ContextSelectedLayer, type ContextLayers, type ContextMap, CONTEXT_SELECTED_LAYER, type ContextSelectedFeatureId, CONTEXT_SELECTED_FEATURE_ID } from './lib/contexts';
   import { isDarkMode } from './lib/theme';
   import { storePopup } from '@skeletonlabs/skeleton';
   import { writable } from 'svelte/store';
@@ -23,6 +23,7 @@
   const mapContext = setContext<ContextMap>(CONTEXT_MAP, writable(undefined));
   const layersContext = setContext<ContextLayers>(CONTEXT_LAYERS, layers.context);
   const selectedLayerContext = setContext<ContextSelectedLayer>(CONTEXT_SELECTED_LAYER, writable(undefined));
+  const selectedFeatureIdContext = setContext<ContextSelectedFeatureId>(CONTEXT_SELECTED_FEATURE_ID, writable(undefined));
   
   $: if ($isDarkMode) {
     document.documentElement.classList.add('dark');
@@ -35,9 +36,13 @@
       layer.setDefaultStyle();
     }
     if ($selectedLayerContext && $selectedLayerContext instanceof AppFeatureLayerBase) {
-      $selectedLayerContext.setSelectedStyle();
+      $selectedLayerContext.setLayerSelectedStyle();
     }
   }
+  
+  selectedLayerContext.subscribe(() => {
+    selectedFeatureIdContext.set(undefined);
+  });
 
   let shouldRerenderLayers: boolean = false;
   layersContext.subscribe(() => {

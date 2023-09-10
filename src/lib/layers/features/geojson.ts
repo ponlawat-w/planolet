@@ -1,4 +1,4 @@
-import { DataTable } from '../../table';
+import { DataTable } from '../../table/table';
 import { AppFeatureLayerBase } from './base';
 import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import type { RendererGeometry } from './renderer/renderer';

@@ -3,7 +3,7 @@ import { AppFeatureLayerBase } from './base';
 import { Buffer } from 'buffer';
 import { FeatureDataTable } from './table';
 import { Geometry as WKXGeometry } from '../../wkx';
-import { DataTable, type TableColumn } from '../../table';
+import { DataTable, type TableColumn } from '../../table/table';
 import type { Feature, FeatureCollection, GeoJsonGeometryTypes, Geometry } from 'geojson';
 import type { CSVGeometryOptions, CSVOptions } from '../../csv/options';
 import { AppGeoJSONLayer } from './geojson';
@@ -50,7 +50,7 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
   }
 
   public getRendererGeometries(): RendererGeometry[] {
-    const idFieldIndex = this._data.table.headers.map(x => x.name).indexOf(FEATURE_ID_FIELD);
+    const idFieldIndex = this._data.table.columns.map(x => x.name).indexOf(FEATURE_ID_FIELD);
     if (idFieldIndex < 0) throw new Error('Features have no IDs');
     return this._data.table.rows.map(x => ({
       id: x[idFieldIndex],
@@ -84,7 +84,7 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
       const geometry = this.getGeometry(this._data.table.objectifyRow(row));
       geometries.push(geometry ? WKXGeometry.parseGeoJSON(geometry).toWkb() : Buffer.from([]));
     }
-    return new FeatureDataTable(this._data.table.headers, this._data.table.rows, geometries);
+    return new FeatureDataTable(this._data.table.columns, this._data.table.rows, geometries);
   }
 
   private static getGeometryOptionsFromColumns(columns: TableColumn[]): CSVGeometryOptions {
@@ -124,20 +124,20 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
     for (const delimiter of DELIMITERS_SET) {
       try {
         const table = DataTable.createFromCsv(preview, { delimiter });
-        if (!bestDelimiterTable || bestDelimiterTable.headers.length < table.headers.length) {
+        if (!bestDelimiterTable || bestDelimiterTable.columns.length < table.columns.length) {
           bestDelimiter = delimiter;
           bestDelimiterTable = table;
         }
       } finally { continue; }
     }
 
-    if (!bestDelimiter || !bestDelimiterTable || bestDelimiterTable.headers.length < minColumns) {
+    if (!bestDelimiter || !bestDelimiterTable || bestDelimiterTable.columns.length < minColumns) {
       return undefined;
     }
     return {
       options: {
         delimiter: bestDelimiter,
-        geometry: this.getGeometryOptionsFromColumns(bestDelimiterTable.headers)
+        geometry: this.getGeometryOptionsFromColumns(bestDelimiterTable.columns)
       },
       preview: bestDelimiterTable
     };

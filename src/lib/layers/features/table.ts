@@ -1,4 +1,4 @@
-import { DataTable, type TableColumn, type TableRow } from '../../table';
+import { DataTable, type TableColumn, type TableRow } from '../../table/table';
 import type { Buffer } from 'buffer';
 
 export class FeatureDataTable extends DataTable {
@@ -15,6 +15,6 @@ export class FeatureDataTable extends DataTable {
   }
 
   public static fromDataTable(dataTable: DataTable, geometries: Buffer[]): FeatureDataTable {
-    return new FeatureDataTable(dataTable.headers, dataTable.rows, geometries);
+    return new FeatureDataTable(dataTable.columns, dataTable.rows, geometries);
   }
 }

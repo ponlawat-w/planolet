@@ -1,11 +1,11 @@
 import { AppObjectLayer } from '../object';
 import { FeatureDataTable } from './table';
-import { Geometry as WKXGeometry } from '../../wkx';
-import { getDefaultStyle, getHoveredStyle, getSelectedStyle, type RendererFeatureGroupStyle, type RendererGeometry } from './renderer/renderer';
-import { RendererFeatureGroupCollection } from './renderer/feature-group-collection';
-import type { DataTable } from '../../table';
-import type { FeatureCollection, GeoJsonGeometryTypes } from 'geojson';
 import { FeatureGroup, Map } from 'leaflet';
+import { Geometry as WKXGeometry } from '../../wkx';
+import { getDefaultStyle, getFeatureHoveredStyle, getFeatureSelectedStyle, getLayerSelectedStyle, type RendererFeatureGroupStyle, type RendererGeometry } from './renderer/renderer';
+import { RendererFeatureGroupCollection } from './renderer/feature-group-collection';
+import type { DataTable } from '../../table/table';
+import type { FeatureCollection, GeoJsonGeometryTypes } from 'geojson';
 
 export type AttributedFeature = Record<string, any> & { properties: Record<string, any> };
 
@@ -20,8 +20,9 @@ export abstract class AppFeatureLayerBase<DataType = any> extends AppObjectLayer
 
   public url?: string = undefined;
   public defaultStyle: RendererFeatureGroupStyle = getDefaultStyle();
-  public hoveredStyle: RendererFeatureGroupStyle = getHoveredStyle();
-  public selectedStyle: RendererFeatureGroupStyle = getSelectedStyle();
+  public layerSelectedStyle: RendererFeatureGroupStyle = getLayerSelectedStyle();
+  public featureHoveredStyle: RendererFeatureGroupStyle = getFeatureHoveredStyle();
+  public featureSelectedStyle: RendererFeatureGroupStyle = getFeatureSelectedStyle();
 
   public get data() { return this._data; }
 
@@ -63,13 +64,18 @@ export abstract class AppFeatureLayerBase<DataType = any> extends AppObjectLayer
     this._layersCollection.setStyle(id, this.defaultStyle);
   }
 
-  public setHoverStyle(id?: string) {
-    if (!id) return this._layersCollection.setAllStyles(this.hoveredStyle);
-    this._layersCollection.setStyle(id, this.hoveredStyle);
+  public setLayerSelectedStyle(id?: string) {
+    if (!id) return this._layersCollection.setAllStyles(this.layerSelectedStyle);
+    this._layersCollection.setStyle(id, this.layerSelectedStyle);
   }
 
-  public setSelectedStyle(id?: string) {
-    if (!id) return this._layersCollection.setAllStyles(this.selectedStyle);
-    this._layersCollection.setStyle(id, this.selectedStyle);
+  public setFeatureHoveredStyle(id?: string) {
+    if (!id) return this._layersCollection.setAllStyles(this.featureHoveredStyle);
+    this._layersCollection.setStyle(id, this.featureHoveredStyle);
+  }
+
+  public setFeatureSelectedStyle(id?: string) {
+    if (!id) return this._layersCollection.setAllStyles(this.featureSelectedStyle);
+    this._layersCollection.setStyle(id, this.featureSelectedStyle);
   }
 }

@@ -1,22 +1,25 @@
 import { CircleMarker, LatLng, Layer, Polygon as LeafletPolygon, Polyline, type CircleMarkerOptions, type PathOptions } from 'leaflet';
-import { RendererFeatureGroup } from './feature-group';
 import type { Geometry, LineString, Point, Polygon as GeoJSONPolygon, MultiPoint, MultiLineString, MultiPolygon } from 'geojson';
-import { RendererFeatureGroupCollection } from './feature-group-collection';
 
 export type RendererGeometry = { id: string, geometry: Geometry };
 export type RendererFeatureGroupStyle = { pointStyle: CircleMarkerOptions, lineStringStyle: PathOptions, polygonStyle: PathOptions };
 
 export const getDefaultStyle = (): RendererFeatureGroupStyle => ({
-  pointStyle: { fill: true, fillColor: '#ff0000', radius: 4, stroke: false, fillOpacity: 1 },
-  lineStringStyle: { fill: false, stroke: true, color: '#ff0000', weight: 2 },
-  polygonStyle: { fill: true, fillColor: '#aa0000', weight: 2, stroke: true, color: '#ff0000', fillOpacity: 1 }
-});
-export const getHoveredStyle = (): RendererFeatureGroupStyle => ({
   pointStyle: { fill: true, fillColor: '#0000ff', radius: 4, stroke: false, fillOpacity: 1 },
   lineStringStyle: { fill: false, stroke: true, color: '#0000ff', weight: 2 },
   polygonStyle: { fill: true, fillColor: '#0000aa', weight: 2, stroke: true, color: '#0000ff', fillOpacity: 1 }
 });
-export const getSelectedStyle = (): RendererFeatureGroupStyle => ({
+export const getLayerSelectedStyle = (): RendererFeatureGroupStyle => ({
+  pointStyle: { fill: true, fillColor: '#ff0000', radius: 4, stroke: false, fillOpacity: 1 },
+  lineStringStyle: { fill: false, stroke: true, color: '#ff0000', weight: 2 },
+  polygonStyle: { fill: true, fillColor: '#aa0000', weight: 2, stroke: true, color: '#ff0000', fillOpacity: 1 }
+});
+export const getFeatureHoveredStyle = (): RendererFeatureGroupStyle => ({
+  pointStyle: { fill: true, fillColor: '#ff8800', radius: 4, stroke: false, fillOpacity: 1 },
+  lineStringStyle: { fill: false, stroke: true, color: '#ff8800', weight: 2 },
+  polygonStyle: { fill: true, fillColor: '#dd6600', weight: 2, stroke: true, color: '#ff8800', fillOpacity: 1 }
+});
+export const getFeatureSelectedStyle = (): RendererFeatureGroupStyle => ({
   pointStyle: { fill: true, fillColor: '#ff00ff', radius: 4, stroke: false, fillOpacity: 1 },
   lineStringStyle: { fill: false, stroke: true, color: '#00ff00', weight: 2 },
   polygonStyle: { fill: true, fillColor: '#aa00aa', weight: 2, stroke: true, color: '#ff00ff', fillOpacity: 1 }
