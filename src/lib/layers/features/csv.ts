@@ -1,13 +1,15 @@
 import { AppFeatureLayer } from './feature';
 import { AppFeatureLayerBase } from './base';
-import { Buffer } from 'buffer';
-import { FeatureDataTable } from './table';
-import { Geometry as WKXGeometry } from '../../wkx';
-import { DataTable, type TableColumn } from '../../table';
-import type { Feature, FeatureCollection, GeoJsonGeometryTypes, Geometry } from 'geojson';
-import type { CSVGeometryOptions, CSVOptions } from '../../csv/options';
 import { AppGeoJSONLayer } from './geojson';
+import { Buffer } from 'buffer';
+import { FeatureDataTable } from '../../table/feature';
+import { Geometry as WKXGeometry } from '../../wkx';
+import type { CSVGeometryOptions, CSVOptions } from '../../csv/options';
+import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import type { RendererGeometry } from './renderer/renderer';
+import type { DataTable } from '../../table/table';
+import type { TableColumn } from '../../table/types';
+import { createTableFromCSV } from '../../table/utils';
 
 const DELIMITERS_SET = [',', ';', '\t'];
 const FEATURE_ID_FIELD = '__FEATURE_ID__';
@@ -16,7 +18,6 @@ export type AppCsvLayerData = {
   table: DataTable,
   options: CSVOptions
 };
-
 
 export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
   public constructor(name: string, table: DataTable, options: CSVOptions) {
@@ -58,7 +59,7 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
     const idFieldIndex = this._data.table.columns.map(x => x.name).indexOf(FEATURE_ID_FIELD);
     if (idFieldIndex < 0) throw new Error('Features have no IDs');
     return this._data.table.rows.map(x => ({
-      id: x[idFieldIndex],
+      id: x[idFieldIndex].toString(),
       geometry: this.getGeometry(this._data.table.objectifyRow(x))
     }));
   }
@@ -79,18 +80,13 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
     return this._data.table.rows.length;
   }
   
-  public getAttributesTable(includeIdField: boolean = true): DataTable {
-    if (includeIdField) return this._data.table;
-    const idFieldIdx = this._data.table.getIdFieldIndex();
-    return new DataTable(
-      this._data.table.columns.filter((_, i) => i !== idFieldIdx),
-      this._data.table.rows.map(row => row.filter((_, i) => i !== idFieldIdx))
-    );
+  public getAttributesTable(): DataTable {
+    return this._data.table;
   }
 
-  public getFeaturesTable(includeIdField: boolean = true): FeatureDataTable {
+  public getFeaturesTable(): FeatureDataTable {
     const geometries: Buffer[] = [];
-    const table = includeIdField ? this._data.table : this.getAttributesTable(false);
+    const table = this.getAttributesTable();
     for (const row of table.rows) {
       const geometry = this.getGeometry(table.objectifyRow(row));
       geometries.push(geometry ? WKXGeometry.parseGeoJSON(geometry).toWkb() : Buffer.from([]));
@@ -152,7 +148,7 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
 
     for (const delimiter of DELIMITERS_SET) {
       try {
-        const table = DataTable.createFromCsv(preview, { delimiter });
+        const table = createTableFromCSV(preview, { delimiter });
         if (!bestDelimiterTable || bestDelimiterTable.columns.length < table.columns.length) {
           bestDelimiter = delimiter;
           bestDelimiterTable = table;
@@ -173,6 +169,6 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
   }
 
   public static createFromRaw(name: string, raw: string, options: CSVOptions): AppCSVLayer {
-    return new AppCSVLayer(name, DataTable.createFromCsv(raw, options), options);
+    return new AppCSVLayer(name, createTableFromCSV(raw, options), options);
   }
 }

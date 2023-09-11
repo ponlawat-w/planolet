@@ -47,10 +47,12 @@
             </tr>
             {#each keys as key}
             <tr>
-              <th class="!p-1 !whitespace-nowrap overflow-x-auto text-left">{key}</th>
-              <td class="!p-1">
-                <input type="text" class="input p-0" on:keypress={() => { touched = true; }} bind:value={featureAttributes[key]}>
-              </td>
+              <label>
+                <th class="!p-1 !whitespace-nowrap overflow-x-auto text-left">{key}</th>
+                <td class="!p-1">
+                  <input type="text" class="input p-0" on:keypress={() => { touched = true; }} value={featureAttributes[key]} readonly>
+                </td>
+              </label>
             </tr>
             {/each}
             {#if touched}

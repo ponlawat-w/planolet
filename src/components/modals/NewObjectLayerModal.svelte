@@ -9,7 +9,7 @@
   import type { AppObjectLayer } from '../../lib/layers/object';
   import type { CSVOptions } from '../../lib/csv/options';
   import type { ModalParent } from '../../types';
-  import type { DataTable } from '../../lib/table';
+    import type { DataTable } from '../../lib/table/table';
 
   export let parent: ModalParent;
 

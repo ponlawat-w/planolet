@@ -1,6 +1,6 @@
 import type { TableSource } from '@skeletonlabs/skeleton';
 import { AppLayer } from './layer';
-import type { DataTable } from '../table';
+import type { DataTable } from '../table/table';
 
 export class AppTableLayer extends AppLayer {
   public data: DataTable;

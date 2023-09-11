@@ -1,5 +1,5 @@
 import { AppFeatureLayerBase } from './base';
-import { DataTable } from '../../table';
+import { DataTable } from '../../table/table';
 import { v4 } from 'uuid';
 import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import type { RendererGeometry } from './renderer/renderer';
@@ -89,17 +89,11 @@ export class AppGeoJSONLayer extends AppFeatureLayerBase<AppGeoJSONLayerData> {
   private getRecords(): Record<string, any>[] {
     if (this._data.type === 'Feature') return [{ ...this._data.properties }];
     if (this._data.type === 'FeatureCollection') return this._data.features.map(x => ({ ...x.properties }));
-    return [{ id: this._singleGeometryFeatureId }];
+    return [{ [this._idField]: this._singleGeometryFeatureId }];
   }
 
-  public getAttributesTable(includeIdField: boolean = true): DataTable {
-    const records = this.getRecords();
-    if (!includeIdField) {
-      for (const record of records) {
-        delete record[this._idField];
-      }
-    }
-    return DataTable.createFromRecords(records, includeIdField ? this.idField : undefined);
+  public getAttributesTable(): DataTable {
+    return DataTable.createFromRecords(this.getRecords(), this.idField);
   }
 
   public getRecordFromId(id: string): Record<string, any>|undefined {

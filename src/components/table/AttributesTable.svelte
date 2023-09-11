@@ -2,9 +2,10 @@
   import { AppFeatureLayerBase } from '../../lib/layers/features/base';
   import { getMapLayersContext } from '../../lib/contexts';
   import EditTableRow from './EditTableRow.svelte';
-  import type { DataTable, TableDataSource, TableDataSourceRow } from '../../lib/table';
-    import { toastStore } from '@skeletonlabs/skeleton';
-    import { getSuccessToast } from '../../lib/toasts';
+  import { toastStore } from '@skeletonlabs/skeleton';
+  import { getSuccessToast } from '../../lib/toasts';
+  import type { DataTable } from '../../lib/table/table';
+  import type { TableDataSource, TableDataSourceRow } from '../../lib/table/types';
 
   const { mapContext, selectedLayerContext, selectedFeatureIdContext } = getMapLayersContext();
 
@@ -53,7 +54,7 @@
     const id = event.detail.id;
     const record: Record<string, any> = {};
     for (let i = 0; i < data.columns.length; i++) {
-      record[data.columns[i]] = event.detail.data[i];
+      record[data.columns[i].name] = event.detail.data[i];
     }
     selectedLayer.updateAttributes(id, record);
     selectedLayer = selectedLayer;
@@ -75,7 +76,7 @@
     <tbody>
       {#each data.rows as row, idx}
         {#if editingIndex === idx}
-          <EditTableRow row={row} on:submit={editSubmit} on:cancel={() => { editingIndex = -1; }} />
+          <EditTableRow columns={data.columns} row={row} on:submit={editSubmit} on:cancel={() => { editingIndex = -1; }} />
         {:else}
           <tr class:hover:!bg-tertiary-500={selectedId !== row.id}
             class:hover:dark:text-black={selectedId !== row.id}

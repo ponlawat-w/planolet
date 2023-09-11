@@ -2,7 +2,7 @@ import { AppFeatureLayerBase } from './base';
 import { Buffer } from 'buffer';
 import { Geometry } from '../../wkx';
 import type { FeatureCollection, Geometry as GeoJSONGeometry } from 'geojson';
-import { DataTable } from '../../table';
+import { DataTable } from '../../table/table';
 import { v4 } from 'uuid';
 import type { RendererGeometry } from './renderer/renderer';
 
@@ -68,8 +68,8 @@ export class AppWKXLayer extends AppFeatureLayerBase<WKXFeatures> {
     return this._data.length;
   }
 
-  public getAttributesTable(includeIdField: boolean = true): DataTable {
-    return includeIdField ? DataTable.createFromRecords(this._data.map(x => ({ id: x.id })), 'id') : DataTable.createFromRecords(this._data.map(_ => ({})));
+  public getAttributesTable(): DataTable {
+    return DataTable.createFromRecords(this._data.map(x => ({ id: x.id })), 'id');
   }
 
   public getRecordFromId(id: string): Record<string, any>|undefined {

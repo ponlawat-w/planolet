@@ -1,4 +1,4 @@
-import { DataTable, type TableColumn, type TableRow } from '../../table';
+import { DataTable, type TableColumn, type TableRow } from './table';
 import type { Buffer } from 'buffer';
 
 export class FeatureDataTable extends DataTable {

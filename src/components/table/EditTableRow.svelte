@@ -1,7 +1,9 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import type { TableDataSourceRow, TableRow } from '../../lib/table';
+  import type { TableColumn, TableDataSourceRow, TableRow } from '../../lib/table/types';
+  import EditAttributeValue from './EditAttributeValue.svelte';
 
+  export let columns: TableColumn[];
   export let row: TableDataSourceRow;
 
   let data: TableRow;
@@ -34,7 +36,7 @@
   </td>
   {#each data as _, idx}
     <td class="!p-0">
-      <input type="text" form="editFeatureAttributesForm" class="input p-2 text-sm" bind:value={data[idx]} on:keyup={keyup}>
+      <EditAttributeValue column={columns[idx]} bind:value={data[idx]} generalClass="input" inputClass="p-2 text-sm" on:keyup={keyup} />
     </td>
   {/each}
 </tr>

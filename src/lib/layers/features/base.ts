@@ -1,10 +1,10 @@
 import { AppObjectLayer } from '../object';
-import { FeatureDataTable } from './table';
+import { FeatureDataTable } from '../../table/feature';
 import { FeatureGroup, Map } from 'leaflet';
 import { Geometry as WKXGeometry } from '../../wkx';
 import { getDefaultStyle, getFeatureHoveredStyle, getFeatureSelectedStyle, getLayerSelectedStyle, type RendererFeatureGroupStyle, type RendererGeometry } from './renderer/renderer';
 import { RendererFeatureGroupCollection } from './renderer/feature-group-collection';
-import type { DataTable } from '../../table';
+import type { DataTable } from '../../table/table';
 import type { FeatureCollection, GeoJsonGeometryTypes } from 'geojson';
 
 export type AttributedFeature = Record<string, any> & { properties: Record<string, any> };
@@ -44,7 +44,7 @@ export abstract class AppFeatureLayerBase<DataType = any> extends AppObjectLayer
   public abstract getRendererGeometries(): RendererGeometry[];
   public abstract getGeometryTypeText(): string;
   public abstract getFeaturesCount(): number;
-  public abstract getAttributesTable(includeIdField?: boolean): DataTable;
+  public abstract getAttributesTable(): DataTable;
   public abstract getRecordFromId(id: string): Record<string, any>|undefined;
   public abstract updateAttributes(id: string, record: Record<string, any>): void;
 
@@ -52,8 +52,8 @@ export abstract class AppFeatureLayerBase<DataType = any> extends AppObjectLayer
     return [...(new Set<GeoJsonGeometryTypes>(this.getFeatureCollection().features.map(x => x.geometry.type)))];
   }
   
-  public getFeaturesTable(includeIdField?: boolean): FeatureDataTable {
-    const table = this.getAttributesTable(includeIdField);
+  public getFeaturesTable(): FeatureDataTable {
+    const table = this.getAttributesTable();
     const geometries = this.getFeatureCollection().features.map(x => WKXGeometry.parseGeoJSON(x.geometry).toWkb());
     return FeatureDataTable.fromDataTable(table, geometries);
   }
