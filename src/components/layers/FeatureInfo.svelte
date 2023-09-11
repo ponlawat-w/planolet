@@ -1,29 +1,34 @@
 <script lang="ts">
+  import { toastStore } from '@skeletonlabs/skeleton';
   import { getMapLayersContext } from '../../lib/contexts';
   import { AppFeatureLayerBase } from '../../lib/layers/features/base';
+  import type { TableColumn } from '../../lib/table/types';
+  import EditAttributeValue from '../table/EditAttributeValue.svelte';
+  import { getSuccessToast } from '../../lib/toasts';
 
   const { selectedLayerContext, selectedFeatureIdContext } = getMapLayersContext();
 
   let layer: AppFeatureLayerBase;
+  let columns: TableColumn[];
   let featureAttributes: Record<string, any> = undefined;
-  let keys: string[] = [];
   let touched: boolean = false;
 
   const changed = () => {
     layer = $selectedLayerContext instanceof AppFeatureLayerBase ? $selectedLayerContext : undefined;
+    columns = layer.getAttributesTableColumns().filter(x => !x.hidden);
     featureAttributes = {...layer?.getRecordFromId($selectedFeatureIdContext)} ?? undefined;
-    keys = featureAttributes ? Object.keys(featureAttributes).filter(x => x !== layer.idField) : [];
     touched = false;
   };
 
   const submitEditProperties = () => {
     if (!layer) return;
     const obj = {};
-    for (const key of keys) {
-      obj[key] = featureAttributes[key];
+    for (const column of columns) {
+      obj[column.name] = featureAttributes[column.name];
     }
     layer.updateAttributes($selectedFeatureIdContext, obj);
     selectedLayerContext.set(layer);
+    toastStore.trigger(getSuccessToast('Feature attributes have been updated'));
   };
 
   $: if ($selectedLayerContext || $selectedFeatureIdContext) {
@@ -45,14 +50,14 @@
                 <input type="text" class="input p-0 font-mono" value={featureAttributes[layer.idField]} readonly>
               </td>
             </tr>
-            {#each keys as key}
+            {#each columns as column}
             <tr>
-              <label>
-                <th class="!p-1 !whitespace-nowrap overflow-x-auto text-left">{key}</th>
-                <td class="!p-1">
-                  <input type="text" class="input p-0" on:keypress={() => { touched = true; }} value={featureAttributes[key]} readonly>
-                </td>
-              </label>
+              <th class="!p-1 !whitespace-nowrap overflow-x-auto text-left">{column.name}</th>
+              <td class="!p-1">
+                <EditAttributeValue column={column} bind:value={featureAttributes[column.name]}
+                  generalClass="input" inputClass="p-0"
+                  on:change={() => { touched = true; }} on:keypress={() => { touched = true; }} />
+              </td>
             </tr>
             {/each}
             {#if touched}
@@ -64,7 +69,7 @@
                     <i class="fa fa-save mr-2"></i>
                     Save
                   </button>
-                  <button type="button" class="btn text-xs p-2 variant-filled-surface">
+                  <button type="button" class="btn text-xs p-2 variant-filled-surface" on:click={changed}>
                     <i class="fa fa-times mr-2"></i>
                     Cancel
                   </button>

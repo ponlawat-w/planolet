@@ -84,6 +84,10 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
     return this._data.table;
   }
 
+  public getAttributesTableColumns(): TableColumn[] {
+    return this._data.table.columns;
+  }
+
   public getFeaturesTable(): FeatureDataTable {
     const geometries: Buffer[] = [];
     const table = this.getAttributesTable();

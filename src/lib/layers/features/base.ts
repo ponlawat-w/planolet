@@ -6,6 +6,7 @@ import { getDefaultStyle, getFeatureHoveredStyle, getFeatureSelectedStyle, getLa
 import { RendererFeatureGroupCollection } from './renderer/feature-group-collection';
 import type { DataTable } from '../../table/table';
 import type { FeatureCollection, GeoJsonGeometryTypes } from 'geojson';
+import type { TableColumn } from '../../table/types';
 
 export type AttributedFeature = Record<string, any> & { properties: Record<string, any> };
 
@@ -45,6 +46,7 @@ export abstract class AppFeatureLayerBase<DataType = any> extends AppObjectLayer
   public abstract getGeometryTypeText(): string;
   public abstract getFeaturesCount(): number;
   public abstract getAttributesTable(): DataTable;
+  public abstract getAttributesTableColumns(): TableColumn[];
   public abstract getRecordFromId(id: string): Record<string, any>|undefined;
   public abstract updateAttributes(id: string, record: Record<string, any>): void;
 

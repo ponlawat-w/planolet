@@ -70,7 +70,7 @@
     <thead>
       <tr>
         <th></th>
-        {#each data.columns as column}<th class="!p-2">{column}</th>{/each}
+        {#each data.columns as column}<th class="!p-2">{column.name}</th>{/each}
       </tr>
     </thead>
     <tbody>

@@ -35,7 +35,7 @@
     </button>
   </td>
   {#each data as _, idx}
-    <td class="!p-0">
+    <td class="!p-0 text-center">
       <EditAttributeValue column={columns[idx]} bind:value={data[idx]} generalClass="input" inputClass="p-2 text-sm" on:keyup={keyup} />
     </td>
   {/each}

@@ -1,12 +1,15 @@
 import { AppFeatureLayerBase } from './base';
-import { DataTable } from '../../table/table';
+import { createTableFromRecords } from '../../table/utils';
 import { v4 } from 'uuid';
+import type { DataTable } from '../../table/table';
 import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import type { RendererGeometry } from './renderer/renderer';
+import type { TableColumn } from '../../table/types';
 
 export type AppGeoJSONLayerData = FeatureCollection | Feature | Geometry;
 
 export class AppGeoJSONLayer extends AppFeatureLayerBase<AppGeoJSONLayerData> {
+  protected _columns: TableColumn[];
   protected _singleGeometryFeatureId: string|undefined = undefined;
 
   public constructor(param: { name: string, raw?: string, data?: AppGeoJSONLayerData }) {
@@ -37,6 +40,8 @@ export class AppGeoJSONLayer extends AppFeatureLayerBase<AppGeoJSONLayerData> {
     if (singleGeometry) {
       this._singleGeometryFeatureId = v4();
     }
+
+    this.loadAttributeColumns();
   }
 
   public getFeatureCollection(): FeatureCollection {
@@ -50,6 +55,10 @@ export class AppGeoJSONLayer extends AppFeatureLayerBase<AppGeoJSONLayerData> {
         geometry: this._data as Geometry
       }]
     }
+  }
+
+  private loadAttributeColumns() {
+    this._columns = createTableFromRecords(this.getFeatureCollection().features.map(x => x.properties), this._idField).columns;
   }
 
   public getRendererGeometries(): RendererGeometry[] {
@@ -93,7 +102,11 @@ export class AppGeoJSONLayer extends AppFeatureLayerBase<AppGeoJSONLayerData> {
   }
 
   public getAttributesTable(): DataTable {
-    return DataTable.createFromRecords(this.getRecords(), this.idField);
+    return createTableFromRecords(this.getRecords(), this.idField);
+  }
+
+  public getAttributesTableColumns(): TableColumn[] {
+    return this._columns;
   }
 
   public getRecordFromId(id: string): Record<string, any>|undefined {

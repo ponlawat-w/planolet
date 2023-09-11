@@ -47,8 +47,8 @@
     }
   }
   
-  selectedLayerContext.subscribe(() => {
-    selectedFeatureIdContext.set(undefined);
+  selectedLayerContext.subscribe(layer => {
+    if (!(layer instanceof AppFeatureLayerBase) || !layer.getRecordFromId($selectedFeatureIdContext)) selectedFeatureIdContext.set(undefined);
   });
   selectedFeatureIdContext.subscribe(id => {
     if (id || !($selectedLayerContext instanceof AppFeatureLayerBase)) return;

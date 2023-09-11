@@ -20,7 +20,7 @@
 {:else if column.type === 'number'}
   <input type="number" bind:value={value} class={elementClass} readonly={readonly} disabled={disabled} on:keydown on:keyup on:keypress on:change on:focus on:blur>
 {:else if column.type === 'boolean' && typeof value === 'boolean'}
-  <input type="checkbox" bind:checked={value} class={elementClass} disabled={disabled} on:change on:focus on:blur>
+  <input type="checkbox" bind:checked={value} class={'w-4 ' + elementClass} disabled={disabled} on:change on:focus on:blur>
 {:else if column.type === 'bytes'}
   <input type="text" value="BYTES" class={elementClass} readonly={readonly} disabled={disabled}>
 {/if}
