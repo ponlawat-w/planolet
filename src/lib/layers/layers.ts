@@ -5,6 +5,7 @@ import { modalStore, toastStore } from '@skeletonlabs/skeleton';
 import type { AppMapLayer } from './map-layer';
 import type { ContextLayers, ContextSelectedLayer } from '../contexts';
 import type { FeatureGroup, Map } from 'leaflet';
+import { AppFeatureLayerBase } from './features/base';
 
 export class AppLayers {
   private _map: Map = undefined;
@@ -147,6 +148,14 @@ export class AppLayers {
       this.map.fitBounds((newLayer.leaflet as FeatureGroup).getBounds());
     }
     this.updateContext();
+  }
+
+  public rerenderLayer(layer: AppMapLayer, selectedFeatureId?: string) {
+    if (!(layer instanceof AppFeatureLayerBase)) return;
+    this.hideLayer(layer);
+    layer.rerender();
+    layer.setFeatureSelectedStyle(selectedFeatureId);
+    this.showLayer(layer);
   }
 
   public askToRemoveLayer(

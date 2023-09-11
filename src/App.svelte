@@ -4,13 +4,26 @@
   import './app.postcss';
   import '@fortawesome/fontawesome-free/css/all.min.css';
   
-  import { afterUpdate, beforeUpdate, setContext } from 'svelte';
-  import { AppBar, AppShell, Modal, Toast } from '@skeletonlabs/skeleton';
+  import { afterUpdate, beforeUpdate, getContext, setContext } from 'svelte';
+  import { AppBar, AppShell, Modal, Toast, toastStore } from '@skeletonlabs/skeleton';
   import { AppFeatureLayerBase } from './lib/layers/features/base';
   import { AppLayers } from './lib/layers/layers';
   import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
   import { AppLayer } from './lib/layers/layer';
-  import { CONTEXT_LAYERS, CONTEXT_MAP, type ContextSelectedLayer, type ContextLayers, type ContextMap, CONTEXT_SELECTED_LAYER, type ContextSelectedFeatureId, CONTEXT_SELECTED_FEATURE_ID } from './lib/contexts';
+  import {
+    CONTEXT_EDIT_GEOMETRY,
+    CONTEXT_EDIT_GEOMETRY_ID,
+    CONTEXT_LAYERS,
+    CONTEXT_MAP,
+    CONTEXT_SELECTED_FEATURE_ID,
+    CONTEXT_SELECTED_LAYER,
+    type ContextEditGeometry,
+    type ContextEditGeometryId,
+    type ContextLayers,
+    type ContextMap,
+    type ContextSelectedFeatureId,
+    type ContextSelectedLayer,
+  } from './lib/contexts';
   import { isDarkMode } from './lib/theme';
   import { storePopup } from '@skeletonlabs/skeleton';
   import { writable } from 'svelte/store';
@@ -19,6 +32,8 @@
   import LayerInfo from './components/layers/LayerInfo.svelte';
   import LayersBar from './components/layers/LayersList.svelte';
   import Map from './components/Map.svelte';
+  import { EditGeometry } from './lib/layers/features/editor/Geometry';
+    import { getExceptionErrorToast } from './lib/toasts';
 
   const layers = new AppLayers();
   
@@ -26,6 +41,8 @@
   const layersContext = setContext<ContextLayers>(CONTEXT_LAYERS, writable(layers));
   const selectedLayerContext = setContext<ContextSelectedLayer>(CONTEXT_SELECTED_LAYER, writable(undefined));
   const selectedFeatureIdContext = setContext<ContextSelectedFeatureId>(CONTEXT_SELECTED_FEATURE_ID, writable(undefined));
+  const editGeometry = setContext<ContextEditGeometry>(CONTEXT_EDIT_GEOMETRY, writable(undefined));
+  const editGeometryIdContext = setContext<ContextEditGeometryId>(CONTEXT_EDIT_GEOMETRY_ID, writable(undefined));
 
   layers.setContext(layersContext);
   AppLayer.selectedLayerContext = selectedLayerContext;
@@ -46,13 +63,30 @@
       if ($selectedFeatureIdContext) $selectedLayerContext.setFeatureSelectedStyle($selectedFeatureIdContext);
     }
   }
-  
+
+  mapContext.subscribe(map => {
+    editGeometry.set(new EditGeometry(map));
+  });
   selectedLayerContext.subscribe(layer => {
     if (!(layer instanceof AppFeatureLayerBase) || !layer.getRecordFromId($selectedFeatureIdContext)) selectedFeatureIdContext.set(undefined);
   });
   selectedFeatureIdContext.subscribe(id => {
+    if ($editGeometry && $editGeometry.featureId !== id) {
+      $editGeometry.stopEdit();
+      editGeometryIdContext.set(undefined);
+    }
     if (id || !($selectedLayerContext instanceof AppFeatureLayerBase)) return;
     $selectedLayerContext.setLayerSelectedStyle();
+  });
+  editGeometryIdContext.subscribe(id => {
+    if (!$editGeometry) return;
+    $editGeometry.stopEdit();
+    try {
+      if ($selectedLayerContext instanceof AppFeatureLayerBase && id) $editGeometry.startEdit($selectedLayerContext, id);
+    } catch (ex) {
+      toastStore.trigger(getExceptionErrorToast('Cannot edit geometry', ex));
+      editGeometryIdContext.set(undefined);
+    }
   });
 
   let shouldRerenderLayers: boolean = false;

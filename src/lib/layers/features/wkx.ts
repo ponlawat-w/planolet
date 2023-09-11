@@ -18,7 +18,7 @@ export type WKTFeature = WKXFeatureBase & {
 export type WKBFeature = WKXFeatureBase & {
   type: 'WKB',
   encoding: 'hex'|'base64',
-  data: Uint8Array
+  data: Buffer
 };
 
 export type WKXFeature = WKTFeature|WKBFeature;
@@ -87,26 +87,44 @@ export class AppWKXLayer extends AppFeatureLayerBase<WKXFeatures> {
     throw new Error('Attributes table not supported');
   }
 
-  public static strToWKT (str: string): WKTFeature|undefined {
+  public getFeatureFromId(id: string): WKXFeature {
+    const features = this._data.filter(x => x.id === id);
+    if (!features.length) throw new Error('ID not found');
+    return features[0];
+  }
+
+  public getGeometryFromId(id: string): GeoJSONGeometry {
+    return AppWKXLayer.featureToGeoJSON(this.getFeatureFromId(id));
+  }
+
+  public updateGeometry(id: string, geometry: GeoJSONGeometry): void {
+    const idx = this._data.map(x => x.id).indexOf(id);
+    if (idx < 0) throw new Error('ID not found');
+    const feature = this._data[idx];
+
+    if (feature.type === 'WKT') {
+      this._data[idx] = { id, type: 'WKT', data: Geometry.parseGeoJSON(geometry).toWkt() };
+    } else if (feature.type === 'WKB') {
+      this._data[idx] = { id, type: 'WKB', encoding: feature.encoding, data: Geometry.parseGeoJSON(geometry).toWkb() };
+    }
+  }
+
+  public static strToWKT(str: string): WKTFeature|undefined {
     try {
       Geometry.parse(str);
       return { type: 'WKT', data: str, id: v4() };
     } catch { return undefined; }
   }
 
-  public static strToHexWKB (str: string): WKBFeature|undefined {
+  public static strToHexWKB(str: string): WKBFeature|undefined {
     try {
-      const bytes = Uint8Array.from(str.match(/.{1,2}/g).map(x => parseInt(x, 16)));
-      Geometry.parse(Buffer.from(bytes));
-      return { type: 'WKB', encoding: 'hex', data: bytes, id: v4() };
+      return { type: 'WKB', encoding: 'hex', data: Geometry.parse(Buffer.from(str, 'hex')).toWkb(), id: v4() };
     } catch { return undefined; }
   }
 
-  public static strToBase64WKB (str: string): WKBFeature|undefined {
+  public static strToBase64WKB(str: string): WKBFeature|undefined {
     try {
-      const bytes = Uint8Array.from(atob(str), x => x.charCodeAt(0));
-      Geometry.parse(Buffer.from(bytes));
-      return { type: 'WKB', encoding: 'base64', data: bytes, id: v4() };
+      return { type: 'WKB', encoding: 'base64', data: Geometry.parse(Buffer.from(str, 'base64')).toWkb(), id: v4() };
     } catch { return undefined; }
   }
 

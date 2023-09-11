@@ -64,6 +64,11 @@ export class DataTable {
     return -1;
   }
 
+  public setRow(rowIdx: number, row: TableRow) {
+    if (row.length !== this._columns.length) throw new Error('Row and column length mismatched');
+    this._rows[rowIdx] = row;
+  }
+
   public setData(rowIdx: number, colIdx: number, value: any) {
     this._rows[rowIdx][colIdx] = tableFormatValue(this._columns[colIdx], value);
   }

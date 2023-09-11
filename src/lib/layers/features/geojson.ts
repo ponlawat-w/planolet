@@ -132,6 +132,36 @@ export class AppGeoJSONLayer extends AppFeatureLayerBase<AppGeoJSONLayerData> {
     }
   }
 
+  public getGeometryFromId(id: string): Geometry {
+    if (this._data.type === 'FeatureCollection') {
+      const features = this._data.features.filter(x => x.properties[this._idField] === id);
+      if (!features.length) throw new Error('ID not found');
+      return features[0].geometry;
+    }
+    if (this._data.type === 'Feature') {
+      if (this._data.properties[this._idField] === id) return this._data.geometry;
+      throw new Error('ID not found');
+    }
+    if (this._singleGeometryFeatureId === id) return this._data;
+    throw new Error('ID not found');
+  }
+
+  public updateGeometry(id: string, geometry: Geometry): void {
+    if (this._data.type === 'FeatureCollection') {
+      const features = this._data.features.filter(x => x.properties[this._idField] === id);
+      if (!features.length) throw new Error('ID not found');
+      features[0].geometry = geometry;
+      return;
+    }
+    if (this._data.type === 'Feature') {
+      if (this._data.properties[this._idField] !== id) throw new Error('ID not found');
+      this._data.geometry = geometry;
+      return;
+    }
+    if (this._singleGeometryFeatureId !== id) throw new Error('ID not found');
+    this._data = geometry;
+  }
+
   public static rawIsValid(raw: string): boolean {
     try {
       const data = JSON.parse(raw);

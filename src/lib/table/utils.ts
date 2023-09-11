@@ -76,7 +76,7 @@ export const createTableFromCSV = (csvContent: string, options: CSVGeneralOption
   const rows: TableRow[] = [];
   for (let row of parseCsv(csvContent, { columns: false, delimiter: options.delimiter, fromLine: 2 }) as string[][]) {
     if (!columns) {
-      columns = (parseCsv(csvContent, { columns: false, delimiter: options.delimiter, fromLine: 0, toLine: 1 }) as string[])
+      columns = ((parseCsv(csvContent, { columns: false, delimiter: options.delimiter, toLine: 1 })[0] ?? []) as string[])
         .map((name, i) => ({ name, type: tableGetNewCoumnType(row[i]), nullable: true }));
     } else {
       for (let i = 0; i < columns.length; i++) {

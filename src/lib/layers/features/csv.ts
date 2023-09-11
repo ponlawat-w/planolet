@@ -8,8 +8,9 @@ import type { CSVGeometryOptions, CSVOptions } from '../../csv/options';
 import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import type { RendererGeometry } from './renderer/renderer';
 import type { DataTable } from '../../table/table';
-import type { TableColumn } from '../../table/types';
+import type { TableColumn, TableRow } from '../../table/types';
 import { createTableFromCSV } from '../../table/utils';
+import { AppWKXLayer } from './wkx';
 
 const DELIMITERS_SET = [',', ';', '\t'];
 const FEATURE_ID_FIELD = '__FEATURE_ID__';
@@ -33,17 +34,64 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
     }
   }
 
-  public getGeometry(row: any): Geometry|undefined {
+  public getGeometry(record: Record<string, any>): Geometry|undefined {
     const options = this._data.options.geometry;
-    if (options.mode === 'xy') return { type: 'Point', coordinates: [row[options.xColumn], row[options.yColumn]] };
-    if (options.mode === 'wkt') return WKXGeometry.parse(row[options.columnName]).toGeoJSON();
-    if (options.mode === 'wkb') return WKXGeometry.parse(Buffer.from(row[options.columnName], options.encoding)).toGeoJSON();
+    if (options.mode === 'xy') return { type: 'Point', coordinates: [record[options.xColumn], record[options.yColumn]] };
+    if (options.mode === 'wkt') return WKXGeometry.parse(record[options.columnName]).toGeoJSON();
+    if (options.mode === 'wkb') return WKXGeometry.parse(Buffer.from(record[options.columnName], options.encoding)).toGeoJSON();
 
     let subCollection: FeatureCollection;
-    if (options.mode === 'auto') subCollection = AppFeatureLayer.createFromRaw({ name: '', raw: row[options.columnName] }).getFeatureCollection();
-    else if (options.mode === 'geojson') subCollection = new AppGeoJSONLayer({ name: '', raw: row[options.columnName] }).getFeatureCollection();
+    if (options.mode === 'auto') subCollection = AppFeatureLayer.createFromRaw({ name: '', raw: record[options.columnName] }).getFeatureCollection();
+    else if (options.mode === 'geojson') subCollection = new AppGeoJSONLayer({ name: '', raw: record[options.columnName] }).getFeatureCollection();
 
     return subCollection.features.length ? subCollection.features[0].geometry : undefined;
+  }
+
+  public setGeometry(row: TableRow, geometry: Geometry) {
+    const options = this._data.options.geometry;
+    if (options.mode === 'xy' && geometry.type === 'Point') {
+      const xIdx = this._data.table.getColumnIndex(options.xColumn);
+      const yIdx = this._data.table.getColumnIndex(options.yColumn);
+      if (xIdx < 0 || yIdx < 0) throw new Error('Column for X and Y not exist');
+      row[xIdx] = geometry.coordinates[0];
+      row[yIdx] = geometry.coordinates[1];
+      return;
+    } else if (options.mode === 'wkt' || options.mode === 'wkb' || options.mode === 'geojson' || options.mode === 'auto') {
+      const columnIdx = this._data.table.getColumnIndex(options.columnName);
+      if (columnIdx < 0) throw new Error('Column not exist');
+
+      let mode = options.mode;
+      let encoding = options.mode === 'wkb' ? options.encoding : 'hex';
+
+      if (mode === 'auto') {
+        const previousData = row[columnIdx].toString();
+        if (AppGeoJSONLayer.rawIsValid(previousData)) mode = 'geojson';
+        else {
+          try {
+            const wkx = AppWKXLayer.rawToData(previousData)[0];
+            if (wkx.type === 'WKT') mode = 'wkt';
+            else if (wkx.type === 'WKB') {
+              mode = 'wkb';
+              encoding = wkx.encoding;
+            }
+          } finally {
+            mode = 'wkt';
+          }
+        }
+      }
+
+      if (mode === 'wkt') {
+        row[columnIdx] = WKXGeometry.parseGeoJSON(geometry).toWkt();
+        return;
+      } else if (mode === 'wkb') {
+        row[columnIdx] = WKXGeometry.parseGeoJSON(geometry).toWkb().toString(encoding);
+        return;
+      } else if (mode === 'geojson') {
+        row[columnIdx] = JSON.stringify(geometry);
+        return;
+      }
+    }
+    throw new Error('Invalid parameters');
   }
 
   public getFeatureCollection(): FeatureCollection {
@@ -114,6 +162,19 @@ export class AppCSVLayer extends AppFeatureLayerBase<AppCsvLayerData> {
       if (colIdx < 0) continue;
       this._data.table.setData(rowIdx, colIdx, record[column]);
     }
+  }
+
+  public getGeometryFromId(id: string): Geometry {
+    const row = this.getRecordFromId(id);
+    return this.getGeometry(row);
+  }
+
+  public updateGeometry(id: string, geometry: Geometry): void {
+    const idx = this._data.table.getRowIdx(id);
+    if (idx < 0) throw new Error('ID not found');
+    const row = this._data.table.rows[idx];
+    this.setGeometry(row, geometry);
+    this._data.table.setRow(idx, row);
   }
 
   private static getGeometryOptionsFromColumns(columns: TableColumn[]): CSVGeometryOptions {

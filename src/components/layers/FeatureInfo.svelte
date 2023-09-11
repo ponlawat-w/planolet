@@ -6,7 +6,13 @@
   import EditAttributeValue from '../table/EditAttributeValue.svelte';
   import { getSuccessToast } from '../../lib/toasts';
 
-  const { selectedLayerContext, selectedFeatureIdContext } = getMapLayersContext();
+  const {
+    layersContext,
+    selectedLayerContext,
+    selectedFeatureIdContext,
+    editGeometryContext,
+    editGeometryIdContext
+  } = getMapLayersContext();
 
   let layer: AppFeatureLayerBase;
   let columns: TableColumn[];
@@ -29,6 +35,18 @@
     layer.updateAttributes($selectedFeatureIdContext, obj);
     selectedLayerContext.set(layer);
     toastStore.trigger(getSuccessToast('Feature attributes have been updated'));
+  };
+
+  const stopEditGeometry = () => {
+    $editGeometryContext.stopEdit();
+    editGeometryIdContext.set(undefined);
+  };
+
+  const saveGeometry = () => {
+    $editGeometryContext.save();
+    $layersContext.rerenderLayer($selectedLayerContext, $selectedFeatureIdContext);
+    stopEditGeometry();
+    toastStore.trigger(getSuccessToast('Geometry edited'));
   };
 
   $: if ($selectedLayerContext || $selectedFeatureIdContext) {
@@ -56,7 +74,7 @@
               <td class="!p-1">
                 <EditAttributeValue column={column} bind:value={featureAttributes[column.name]}
                   generalClass="input" inputClass="p-0"
-                  on:change={() => { touched = true; }} on:keypress={() => { touched = true; }} />
+                  on:change={() => { touched = true; }} on:keyup={() => { touched = true; }} />
               </td>
             </tr>
             {/each}
@@ -82,10 +100,23 @@
       </form>
     </div>
   {/if}
-  <button type="button" class="btn btn-sm w-full variant-filled-success mb-2">
-    <i class="fa fa-pencil mr-2"></i>
-    Edit Feature Geometry
-  </button>
+  {#if $editGeometryIdContext}
+    <div class="grid grid-cols-2">
+      <button type="button" class="btn btn-sm w-full variant-filled-success mb-2" on:click={saveGeometry}>
+        <i class="fa fa-check mr-2"></i>
+        Save Geometry
+      </button>
+      <button type="button" class="btn btn-sm w-full variant-filled-surface mb-2" on:click={stopEditGeometry}>
+        <i class="fa fa-times mr-2"></i>
+        Cancel
+      </button>
+    </div>
+  {:else}
+    <button type="button" class="btn btn-sm w-full variant-filled-success mb-2" on:click={() => editGeometryIdContext.set($selectedFeatureIdContext)}>
+      <i class="fa fa-pencil mr-2"></i>
+      Edit Feature Geometry
+    </button>
+  {/if}
   <button type="button" class="btn btn-sm w-full variant-filled-secondary" on:click={() => selectedFeatureIdContext.set(undefined)}>
     <i class="fa-regular fa-circle-xmark mr-2"></i>
     Deselect Feature

@@ -58,6 +58,7 @@
     if (type !== AppFeatureLayerDataType.Unknown) return;
     csvInterpretResult = AppCSVLayer.tryGetOptionsFromRaw(text, csvMinColumns);
     if (csvInterpretResult && csvInterpretResult.options) type = AppFeatureLayerDataType.CSV;
+    else type = AppFeatureLayerDataType.Unknown;
   };
 
   const updateData = async() => {
