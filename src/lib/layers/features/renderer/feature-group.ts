@@ -16,4 +16,12 @@ export class RendererFeatureGroup extends FeatureGroup {
       else if (layer instanceof CircleMarker) layer.setStyle(styles.pointStyle);
     }
   }
+
+  public hide() {
+    this.setStyle({ opacity: 0, fillOpacity: 0 });
+  }
+
+  public show() {
+    this.setStyle({ opacity: 1, fillOpacity: 1 });
+  }
 };

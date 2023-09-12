@@ -96,6 +96,18 @@ export abstract class AppFeatureLayerBase<DataType = any> extends AppObjectLayer
     this._layersCollection.setStyle(id, this.featureSelectedStyle);
   }
 
+  public hideFeature(id: string) {
+    const layer = this._layersCollection.getFromId(id);
+    if (!layer) return;
+    layer.hide();
+  }
+
+  public showFeature(id: string) {
+    const layer = this._layersCollection.getFromId(id);
+    if (!layer) return;
+    layer.show();
+  }
+
   protected unbindEvents() {
     for (const layer of this._layersCollection.layers) {
       layer.removeEventListener('click');

@@ -1,6 +1,13 @@
 import type { Geometry, Point } from 'geojson';
-import { Marker, FeatureGroup, LatLng, Map } from 'leaflet';
+import { Marker, FeatureGroup, LatLng, Map, Icon } from 'leaflet';
 import type { AppFeatureLayerBase } from '../base';
+
+const ICON = new Icon({
+  iconUrl: '/assets/geom-edit-marker.png',
+  iconSize: [10, 10],
+  iconAnchor: [5, 5],
+  popupAnchor: [5, 10]
+});
 
 export class EditGeometry {
   private readonly _map: Map;
@@ -25,12 +32,17 @@ export class EditGeometry {
     this._featureId = featureId;
     this._geometry = this._layer.getGeometryFromId(this._featureId);
     this._leaflet = EditGeometry.getLeafletLayer(this._geometry);
+    this._layer.hideFeature(this._featureId);
     this._map.addLayer(this._leaflet);
+    this._leaflet.bringToFront();
   }
 
   public stopEdit() {
     if (!this._map) return;
     if (this._leaflet && this._map.hasLayer(this._leaflet)) this._map.removeLayer(this._leaflet);
+    if (this._layer && this._featureId) {
+      this._layer.showFeature(this._featureId);
+    }
     this._layer = undefined;
     this._featureId = undefined;
     this._geometry = undefined;
@@ -46,7 +58,9 @@ export class EditGeometry {
 
   private static getLeafletLayer(geometry: Geometry): FeatureGroup {
     if (geometry.type !== 'Point') throw new Error('Unsupported');
-    const layer = new Marker(new LatLng(geometry.coordinates[1], geometry.coordinates[0]), { draggable: true });
+    const layer = new Marker(new LatLng(geometry.coordinates[1], geometry.coordinates[0]), {
+      draggable: true, icon: ICON
+    });
     return new FeatureGroup([layer]);
   }
 }
