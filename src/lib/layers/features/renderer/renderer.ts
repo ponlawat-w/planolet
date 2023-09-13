@@ -21,7 +21,7 @@ export const getFeatureHoveredStyle = (): RendererFeatureGroupStyle => ({
 });
 export const getFeatureSelectedStyle = (): RendererFeatureGroupStyle => ({
   pointStyle: { fill: true, fillColor: '#ff00ff', radius: 4, stroke: false, fillOpacity: 1 },
-  lineStringStyle: { fill: false, stroke: true, color: '#00ff00', weight: 2 },
+  lineStringStyle: { fill: false, stroke: true, color: '#ff00ff', weight: 2 },
   polygonStyle: { fill: true, fillColor: '#aa00aa', weight: 2, stroke: true, color: '#ff00ff', fillOpacity: 1 }
 });
 
